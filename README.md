@@ -1,178 +1,130 @@
-# Advanced Agentic Research Platform
+# Agentic AI Research Platform
 
-A comprehensive multi-agent research system with modern web interface, combining reflection patterns, tool usage, and multi-agent orchestration.
+Production-ready multi-agent system for automated research workflows. Built with FastAPI backend and React frontend, implementing advanced agentic patterns including reflection, tool integration, and intelligent orchestration.
 
-## Features
+## Core Features
 
-- 🤖 **Multiple Agent Workflows**
-  - Simple Reflection (Q2): Draft → Critique → Revision
-  - Tool-Enhanced Research (Q3): Search → Reflect → Export
-  - Multi-Agent Orchestration (Q5): Planning → Research → Writing → Editing
+**Agent Workflows**
+- Simple Reflection: Draft generation, critique, and revision cycle
+- Tool-Enhanced Research: Integrated search across arXiv, Tavily, and Wikipedia with automated synthesis
+- Multi-Agent Orchestration: Coordinated planning, research, writing, and editing pipeline
 
-- 🔧 **Integrated Research Tools**
-  - arXiv: Academic papers search
-  - Tavily: Web search
-  - Wikipedia: Encyclopedia knowledge
+**Technical Stack**
+- Backend: FastAPI with async support, OpenAI integration, structured logging
+- Frontend: React with TailwindCSS, real-time monitoring, responsive design
+- Integration: arXiv API, Tavily search, Wikipedia, OpenAI GPT-4/GPT-4o-mini
+- Export: HTML, Markdown, JSON formats
 
-- 🎨 **Modern Web Interface**
-  - Real-time agent monitoring
-  - Interactive workflow configuration
-  - Report history and export (HTML/PDF/Markdown)
-  - Beautiful, responsive design
-
-## Architecture
+## System Architecture
 
 ```
-Projet_Agentic/
-├── backend/              # FastAPI server
-│   ├── app/
-│   │   ├── agents/      # Agent implementations
-│   │   ├── tools/       # Research tools
-│   │   ├── workflows/   # Workflow orchestrators
-│   │   ├── api/         # REST endpoints
-│   │   └── models/      # Data models
-│   └── main.py
-├── frontend/            # React application
-│   ├── src/
-│   │   ├── components/  # UI components
-│   │   ├── pages/       # Application pages
-│   │   └── services/    # API clients
-│   └── package.json
-├── config/
-│   └── settings.yaml
-└── notebooks/
-    └── demo_unified.ipynb
+backend/
+├── app/
+│   ├── agents/          # 7 specialized AI agents
+│   ├── tools/           # External API integrations
+│   ├── workflows/       # Orchestration logic
+│   ├── api/routes/      # REST endpoints
+│   └── models/          # Pydantic schemas
+└── main.py              # FastAPI application
+
+frontend/
+├── src/
+│   ├── components/      # Reusable UI components
+│   ├── pages/           # Route handlers
+│   └── services/        # API client layer
+└── package.json
 ```
 
-## Quick Start
+## Installation
 
-### Prerequisites
-
+**Requirements**
 - Python 3.10+
 - Node.js 18+
-- API Keys:
-  - OpenAI API key
-  - Tavily API key (free tier: 1000 requests/month)
+- OpenAI API key
+- Tavily API key (free tier available)
 
-### Installation
-
-1. **Clone and navigate to project**
-```bash
-cd "c:\Users\abdsall\Downloads\Research Agent\Projet_Agentic"
-```
-
-2. **Setup Backend**
+**Backend Setup**
 ```bash
 cd backend
 python -m venv venv
-.\venv\Scripts\activate
+.\venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-3. **Configure Environment**
+**Environment Configuration**
 Create `backend/.env`:
 ```env
-OPENAI_API_KEY=your_openai_key
-TAVILY_API_KEY=your_tavily_key
+OPENAI_API_KEY=sk-...
+TAVILY_API_KEY=tvly-...
 ```
 
-4. **Setup Frontend**
+**Frontend Setup**
 ```bash
-cd ..\frontend
+cd frontend
 npm install
 ```
 
-### Running the Application
+## Running
 
-**Terminal 1 - Backend:**
+**Start Backend** (Terminal 1)
 ```bash
 cd backend
 .\venv\Scripts\activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python main.py
 ```
+Server runs on http://localhost:8000
 
-**Terminal 2 - Frontend:**
+**Start Frontend** (Terminal 2)
 ```bash
 cd frontend
 npm start
 ```
+Application available at http://localhost:3000
 
-Access the application at: **http://localhost:3000**
+## API Usage
 
-## Usage
-
-### Via Web Interface
-
-1. Navigate to http://localhost:3000
-2. Select workflow type (Reflection / Tool-Enhanced / Multi-Agent)
-3. Enter your research topic
-4. Configure parameters (optional)
-5. Click "Start Research"
-6. Monitor agents in real-time
-7. Export results
-
-### Via API
-
-**Simple Reflection:**
+**Reflection Workflow**
 ```bash
 curl -X POST http://localhost:8000/api/v1/workflows/reflection \
   -H "Content-Type: application/json" \
-  -d '{"topic": "AI Ethics"}'
+  -d '{"topic": "AI Ethics in Healthcare"}'
 ```
 
-**Tool-Enhanced Research:**
+**Research Workflow**
 ```bash
 curl -X POST http://localhost:8000/api/v1/workflows/tool-research \
   -H "Content-Type: application/json" \
-  -d '{"topic": "Quantum Computing", "tools": ["arxiv", "wikipedia"]}'
+  -d '{"topic": "Quantum Computing Applications", "tools": ["arxiv", "wikipedia"]}'
 ```
 
-**Multi-Agent Workflow:**
+**Multi-Agent Workflow**
 ```bash
 curl -X POST http://localhost:8000/api/v1/workflows/multi-agent \
   -H "Content-Type: application/json" \
-  -d '{"topic": "Climate Modeling", "max_steps": 4}'
+  -d '{"topic": "Climate Change Modeling", "max_steps": 4}'
 ```
 
-## API Documentation
-
-Interactive API docs available at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+**API Documentation**
+- Interactive docs: http://localhost:8000/docs
+- Alternative view: http://localhost:8000/redoc
 
 ## Configuration
 
-Edit `config/settings.yaml` to customize:
-- Default models (GPT-4, GPT-4o-mini, etc.)
-- Temperature settings
-- Max tokens
-- Tool preferences
-- Workflow parameters
+Configuration via `backend/.env`:
+```env
+# Models
+DEFAULT_DRAFT_MODEL=gpt-4o
+DEFAULT_REFLECTION_MODEL=gpt-4o-mini
+DEFAULT_RESEARCH_MODEL=gpt-4o
 
-## Examples
-
-See `notebooks/demo_unified.ipynb` for comprehensive examples.
-
-## Troubleshooting
-
-**Backend won't start:**
-- Verify Python 3.10+ is installed
-- Check all dependencies installed: `pip list`
-- Ensure .env file exists with valid API keys
-
-**Frontend build errors:**
-- Clear node_modules: `rm -rf node_modules && npm install`
-- Check Node.js version: `node --version` (should be 18+)
-
-**API key errors:**
-- Verify keys in `.env` file
-- Test keys independently
-- Check Tavily free tier limits (1000/month)
+# API Settings
+MAX_SEARCH_RESULTS=5
+MAX_WORKFLOW_STEPS=4
+REQUEST_TIMEOUT=300
+```
 
 ## License
 
-MIT License
+Proprietary License - Copyright (c) 2025 Abdoulaye Sall. All rights reserved.
 
-## Acknowledgments
-
-Based on the Agentic AI course from DeepLearning.AI
+See LICENSE file for details.
