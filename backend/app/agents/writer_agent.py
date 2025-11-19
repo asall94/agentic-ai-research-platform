@@ -1,15 +1,16 @@
 from .base_agent import BaseAgent
 from openai import OpenAI
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class WriterAgent(BaseAgent):
-    """Agent for writing and drafting content (from Q5)"""
+    """Agent for writing reports (from Q5)"""
     
-    def __init__(self, model: str = "gpt-4o", temperature: float = 1.0):
-        super().__init__(model, temperature)
+    def __init__(self, model: str = "gpt-4o", temperature: float = None):
+        super().__init__(model, temperature or settings.WRITER_TEMPERATURE)
         self.client = OpenAI()
     
     async def execute(self, task: str, **kwargs) -> str:

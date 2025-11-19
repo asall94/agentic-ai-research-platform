@@ -1,5 +1,6 @@
 from .base_agent import BaseAgent
 from openai import OpenAI
+from app.core.config import settings
 from datetime import datetime
 import json
 import logging
@@ -10,8 +11,8 @@ logger = logging.getLogger(__name__)
 class ResearchAgent(BaseAgent):
     """Agent for conducting research with tools (from Q3/Q5)"""
     
-    def __init__(self, model: str = "gpt-4o", temperature: float = 1.0):
-        super().__init__(model, temperature)
+    def __init__(self, model: str = "gpt-4o", temperature: float = None):
+        super().__init__(model, temperature or settings.RESEARCH_TEMPERATURE)
         self.client = OpenAI()
     
     async def execute(self, task: str, tools: list = None, **kwargs) -> str:

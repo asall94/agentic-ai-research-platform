@@ -33,10 +33,14 @@ class Settings(BaseSettings):
     DEFAULT_EDITOR_MODEL: str = "openai:gpt-4o"
     DEFAULT_PLANNER_MODEL: str = "openai:gpt-4o-mini"
     
-    # Temperature
-    DEFAULT_TEMPERATURE: float = 0.7
-    CREATIVE_TEMPERATURE: float = 1.0
-    PRECISE_TEMPERATURE: float = 0.3
+    # Temperature Settings
+    DRAFT_TEMPERATURE: float = 0.7
+    REFLECTION_TEMPERATURE: float = 0.3
+    REVISION_TEMPERATURE: float = 0.5
+    RESEARCH_TEMPERATURE: float = 0.3
+    WRITER_TEMPERATURE: float = 0.7
+    EDITOR_TEMPERATURE: float = 0.7
+    PLANNER_TEMPERATURE: float = 0.3
     
     # Tools
     ENABLE_ARXIV: bool = True

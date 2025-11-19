@@ -1,5 +1,6 @@
 from .base_agent import BaseAgent
 from openai import OpenAI
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,8 +9,8 @@ logger = logging.getLogger(__name__)
 class RevisionAgent(BaseAgent):
     """Agent for revising drafts based on feedback (from Q2)"""
     
-    def __init__(self, model: str = "gpt-4o", temperature: float = 1.0):
-        super().__init__(model, temperature)
+    def __init__(self, model: str = "gpt-4o", temperature: float = None):
+        super().__init__(model, temperature or settings.REVISION_TEMPERATURE)
         self.client = OpenAI()
     
     async def execute(self, original_draft: str, reflection: str, **kwargs) -> str:

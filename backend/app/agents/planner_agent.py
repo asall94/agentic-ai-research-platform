@@ -1,16 +1,17 @@
 from .base_agent import BaseAgent
 from openai import OpenAI
-import ast
+from app.core.config import settings
+import json
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class PlannerAgent(BaseAgent):
-    """Agent for creating research plans (from Q5)"""
+    """Agent for creating plans (from Q5)"""
     
-    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 1.0):
-        super().__init__(model, temperature)
+    def __init__(self, model: str = "gpt-4o-mini", temperature: float = None):
+        super().__init__(model, temperature or settings.PLANNER_TEMPERATURE)
         self.client = OpenAI()
     
     async def execute(self, topic: str, **kwargs) -> list:

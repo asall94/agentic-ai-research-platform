@@ -1,15 +1,16 @@
 from .base_agent import BaseAgent
 from openai import OpenAI
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class ReflectionAgent(BaseAgent):
-    """Agent for reflecting on and critiquing drafts (from Q2)"""
+    """Agent for reflecting on drafts (from Q2)"""
     
-    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 1.0):
-        super().__init__(model, temperature)
+    def __init__(self, model: str = "gpt-4o-mini", temperature: float = None):
+        super().__init__(model, temperature or settings.REFLECTION_TEMPERATURE)
         self.client = OpenAI()
     
     async def execute(self, draft: str, **kwargs) -> str:
