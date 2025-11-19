@@ -41,7 +41,7 @@ frontend/
 - Python 3.10+
 - Node.js 18+
 - OpenAI API key
-- Tavily API key (free tier available)
+- Tavily API key 
 
 **Backend Setup**
 ```bash

@@ -8,7 +8,7 @@ const Footer = () => {
           Advanced Agentic Research Platform v1.0.0
         </p>
         <p className="text-xs text-gray-500 mt-2">
-          Multi-agent research system with reflection, tool usage, and orchestration
+          Multi-agent research system with reflection, tool usage and orchestration
         </p>
       </div>
     </footer>
