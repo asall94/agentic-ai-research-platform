@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
+import sys
 from dotenv import load_dotenv
 
-from app.api.routes import workflows, health
+from app.api.routes import workflows, health, cache
 from app.core.config import settings
+from app.core.startup_checks import check_requirements
 
 # Load environment variables
 load_dotenv()
@@ -17,6 +19,11 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Run startup checks
+if not check_requirements():
+    logger.error("Application cannot start due to failed requirements checks")
+    sys.exit(1)
 
 
 @asynccontextmanager
@@ -47,6 +54,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["workflows"])
+app.include_router(cache.router, prefix="/api/v1/cache", tags=["cache"])
 
 
 @app.get("/")

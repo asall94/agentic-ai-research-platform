@@ -1,79 +1,79 @@
 # Quick Start Guide
 
-## Installation Steps
-
-### 1. Backend Setup
+## One-Command Launch
 
 ```powershell
-# Navigate to backend
-cd "c:\Users\abdsall\Downloads\Research Agent\Projet_Agentic\backend"
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-.\venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and configure environment
-copy .env.example .env
-# Edit .env and add your API keys:
-# - OPENAI_API_KEY=your_key_here
-# - TAVILY_API_KEY=your_key_here
+.\start.ps1
 ```
 
-### 2. Frontend Setup
+Launches both backend (port 8000) and frontend (port 3000). Press Ctrl+C to stop both.
 
+## First-Time Setup
+
+### 1. Install Redis (required for caching)
 ```powershell
-# Navigate to frontend
-cd "c:\Users\abdsall\Downloads\Research Agent\Projet_Agentic\frontend"
+choco install redis-64
+redis-server
+```
 
-# Install dependencies
+### 2. Install Dependencies
+
+**Backend:**
+```powershell
+cd backend
+pip install -r requirements.txt
+```
+
+**Frontend:**
+```powershell
+cd frontend
 npm install
 ```
 
-### 3. Get Your API Keys
+### 3. Configure Environment
+Copy `backend/.env.example` to `backend/.env` and add your API keys:
+```env
+OPENAI_API_KEY=sk-...
+TAVILY_API_KEY=tvly-...
+```
 
-**OpenAI API Key:**
-1. Go to https://platform.openai.com/api-keys
-2. Create new secret key
-3. Copy to `.env` file
+**Get API Keys:**
+- OpenAI: https://platform.openai.com/api-keys
+- Tavily: https://tavily.com (free: 1000 requests/month)
 
-**Tavily API Key (FREE):**
-1. Go to https://tavily.com
-2. Sign up (free account = 1000 requests/month)
-3. Get API key from dashboard
-4. Copy to `.env` file
+## Manual Launch
 
-### 4. Run the Application
-
-**Terminal 1 - Backend:**
+**Backend:**
 ```powershell
 cd backend
 .\venv\Scripts\activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python main.py
 ```
 
-**Terminal 2 - Frontend:**
+**Frontend:**
 ```powershell
 cd frontend
 npm start
 ```
 
-### 5. Access the App
+## Startup Checks
 
-Open your browser: **http://localhost:3000**
+The application automatically verifies:
+- Python 3.10+
+- Required environment variables (OPENAI_API_KEY)
+- Redis connection (if CACHE_ENABLED=True)
+- All Python dependencies
 
-## Testing the API
+Failed checks prevent startup with clear error messages.
 
-Check backend health:
+## Testing
+
+**Health check:**
 ```powershell
 curl http://localhost:8000/api/v1/health
 ```
 
-Test reflection workflow:
+**Reflection workflow:**
 ```powershell
 curl -X POST http://localhost:8000/api/v1/workflows/reflection `
   -H "Content-Type: application/json" `
@@ -82,31 +82,21 @@ curl -X POST http://localhost:8000/api/v1/workflows/reflection `
 
 ## Troubleshooting
 
-**Problem:** Backend won't start
-- **Solution:** Make sure Python 3.10+ is installed: `python --version`
-- Check all packages installed: `pip list`
-- Verify `.env` file exists with valid keys
+**Backend won't start:**
+- Check Python 3.10+: `python --version`
+- Verify `.env` exists with valid keys
+- Review startup check errors in console
 
-**Problem:** Frontend errors
-- **Solution:** Delete node_modules and reinstall: 
-  ```powershell
-  rm -r node_modules
-  npm install
-  ```
+**Redis errors:**
+- Start Redis: `redis-server`
+- Or disable cache: Set `CACHE_ENABLED=False` in `.env`
 
-**Problem:** API key errors
-- **Solution:** Check `.env` file has correct format (no quotes, no spaces)
-- Verify keys are valid by testing them independently
+**Frontend errors:**
+```powershell
+rm -r node_modules
+npm install
+```
 
-**Problem:** Tavily not working
-- **Solution:** Check you've signed up at tavily.com and have valid key
-- Free tier: 1000 requests/month
+## Deployment
 
-## Next Steps
-
-1. ✅ Test Simple Reflection workflow on homepage
-2. ✅ Try different research topics
-3. ✅ Explore API documentation at http://localhost:8000/docs
-4. ✅ Check workflow results and export options
-
-Enjoy your Agentic Research Platform! 🚀
+See README.md for Render deployment instructions.

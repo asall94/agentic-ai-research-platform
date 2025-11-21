@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     MAX_TOOL_TURNS: int = 6
     REQUEST_TIMEOUT: int = 300
     
+    # Semantic Caching
+    REDIS_URL: str = "redis://localhost:6379"
+    CACHE_ENABLED: bool = True
+    CACHE_TTL_SECONDS: int = 2592000  # 30 days
+    CACHE_SIMILARITY_THRESHOLD: float = 0.95
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
