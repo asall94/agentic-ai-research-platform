@@ -107,22 +107,13 @@ class TestMultiAgentWorkflow:
     """Test suite for Multi-Agent Workflow"""
     
     @pytest.mark.asyncio
-    async def test_execute_returns_dict_with_required_keys(self):
+    async def test_execute_returns_dict_with_required_keys(self, mock_openai_client):
         """Workflow should return dict with plan, steps, final_output"""
         workflow = MultiAgentWorkflow()
         
-        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
-             patch('openai.OpenAI') as mock_openai:
-            
+        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner:
             # Mock planner to return steps
             mock_planner.return_value = ["Research", "Write", "Edit"]
-            
-            # Mock OpenAI for agent selection and execution
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content='{"agent": "research_agent", "task": "Research"}'))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
             
             # Mock individual agent executions
             with patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research, \
@@ -143,12 +134,13 @@ class TestMultiAgentWorkflow:
     @pytest.mark.asyncio
     async def test_execute_respects_max_steps(self, mock_openai_client):
         """Workflow should limit execution to max_steps"""
-        # Configure mock for PlannerAgent to return 4 steps
-        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = '["Step1", "Step2", "Step3", "Step4"]'
-        
         workflow = MultiAgentWorkflow(max_steps=2)
         
-        with patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
+        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
+             patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
+            
+            # Mock planner returns 4 steps but workflow should limit to 2
+            mock_planner.return_value = ["Step1", "Step2", "Step3", "Step4"]
             mock_research.return_value = "Done"
             
             result = await workflow.execute("Topic")
