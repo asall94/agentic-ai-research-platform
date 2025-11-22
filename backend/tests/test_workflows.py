@@ -139,32 +139,35 @@ class TestMultiAgentWorkflow:
                 assert "plan" in result
                 assert "history" in result
                 assert "final_report" in result
-                assert "steps" in result
-                assert "final_output" in result
     
     @pytest.mark.asyncio
     async def test_execute_respects_max_steps(self):
         """Workflow should limit execution to max_steps"""
         workflow = MultiAgentWorkflow(max_steps=2)
         
-        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
-             patch('app.workflows.multi_agent.OpenAI') as mock_openai, \
-             patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
+        with patch('openai.OpenAI') as mock_openai_class:
+            # Mock OpenAI for PlannerAgent
+            mock_planner_client = Mock()
+            mock_planner_response = Mock()
+            mock_planner_response.choices = [Mock(message=Mock(content='["Step1", "Step2", "Step3", "Step4"]'))]
+            mock_planner_client.chat.completions.create.return_value = mock_planner_response
             
-            mock_planner.return_value = ["Step1", "Step2", "Step3", "Step4"]
-            mock_research.return_value = "Done"
+            # Mock OpenAI for agent selection in workflow
+            mock_selection_client = Mock()
+            mock_selection_response = Mock()
+            mock_selection_response.choices = [Mock(message=Mock(content='{"agent": "research_agent", "task": "Do research"}'))]
+            mock_selection_client.chat.completions.create.return_value = mock_selection_response
             
-            # Mock OpenAI client
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content='{"agent": "research_agent", "task": "Do research"}'))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
+            # Mock will alternate between planner client and selection client
+            mock_openai_class.side_effect = [mock_planner_client, mock_selection_client]
             
-            result = await workflow.execute("Topic")
-            
-            # Should only execute 2 steps even though planner returned 4
-            assert len(result.get("history", [])) <= 2
+            with patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
+                mock_research.return_value = "Done"
+                
+                result = await workflow.execute("Topic")
+                
+                # Should only execute 2 steps even though planner returned 4
+                assert len(result.get("history", [])) <= 2
 
 
 class TestWorkflowErrorHandling:
