@@ -2,7 +2,7 @@
 import sys
 import os
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 # Add backend to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -13,14 +13,21 @@ os.environ["TAVILY_API_KEY"] = "test-key"
 os.environ["CACHE_ENABLED"] = "False"
 os.environ["LOG_LEVEL"] = "ERROR"
 
+# Mock OpenAI globally before any imports
+mock_openai_module = MagicMock()
+mock_client_instance = MagicMock()
+mock_response = MagicMock()
+mock_message = MagicMock()
+mock_message.content = "Mocked response"
+mock_choice = MagicMock()
+mock_choice.message = mock_message
+mock_response.choices = [mock_choice]
+mock_client_instance.chat.completions.create.return_value = mock_response
+mock_openai_module.OpenAI.return_value = mock_client_instance
+sys.modules['openai'] = mock_openai_module
 
-@pytest.fixture(autouse=True)
+
+@pytest.fixture
 def mock_openai_client():
-    """Auto-mock OpenAI client for all tests"""
-    with patch('openai.OpenAI') as mock_openai:
-        mock_client = Mock()
-        mock_response = Mock()
-        mock_response.choices = [Mock(message=Mock(content="Mocked response"))]
-        mock_client.chat.completions.create = Mock(return_value=mock_response)
-        mock_openai.return_value = mock_client
-        yield mock_client
+    """Fixture to access the mocked OpenAI client"""
+    return mock_client_instance
