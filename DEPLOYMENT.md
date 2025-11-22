@@ -167,3 +167,31 @@ After deployment, access metrics:
    - Render dashboard shows deployment logs
 
 See `.github/CI_CD.md` for detailed configuration.
+
+---
+
+## Terraform Infrastructure as Code
+
+**Automated Render deployment:**
+
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+**Benefits over manual:**
+- Version-controlled infrastructure
+- Repeatable deployments
+- Multi-environment support
+- Auditable changes
+
+**Provisions:**
+- Backend web service with Docker
+- Frontend static site
+- Environment variables injection
+- Auto-deploy from GitHub
+
+**Outputs service IDs for GitHub Actions secrets.**
+
+See `terraform/README.md` for complete guide.

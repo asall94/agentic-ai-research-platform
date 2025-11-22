@@ -1,5 +1,11 @@
 # Agentic AI Research Platform
 
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.2-61dafb.svg)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+
 Production-ready multi-agent system for automated research workflows. Built with FastAPI backend and React frontend, implementing advanced agentic patterns including reflection, tool integration, and intelligent orchestration.
 
 ## System Architecture
@@ -165,32 +171,67 @@ graph LR
 - Tool-Enhanced Research: Integrated search across arXiv, Tavily, and Wikipedia with automated synthesis
 - Multi-Agent Orchestration: Coordinated planning, research, writing, and editing pipeline
 
-**Technical Stack**
+**Production-Grade Stack**
 - Backend: FastAPI with async support, OpenAI integration, structured logging
 - Frontend: React with TailwindCSS, real-time monitoring, responsive design
 - Integration: arXiv API, Tavily search, Wikipedia, OpenAI GPT-4/GPT-4o-mini
 - Cache: Redis with semantic similarity matching (60-80% cost reduction)
 - Rate Limiting: 100 requests/15min per IP (configurable)
+- DevOps: Docker multi-stage builds, GitHub Actions CI/CD, Terraform IaC
 - Export: HTML, Markdown, JSON formats
 
-## System Architecture
+## Quick Start
+
+**With Docker (Recommended):**
+```powershell
+.\docker-start.ps1
+```
+Access at http://localhost:3000
+
+**Manual Setup:**
+```powershell
+# Backend
+cd backend
+.\venv\Scripts\activate
+python main.py
+
+# Frontend (new terminal)
+cd frontend
+npm start
+```
+
+See [Installation](#installation) for detailed setup.
+
+## Project Structure
+
+## Project Structure
 
 ```
 backend/
 ├── app/
 │   ├── agents/          # 7 specialized AI agents
-│   ├── tools/           # External API integrations
-│   ├── workflows/       # Orchestration logic
 │   ├── api/routes/      # REST endpoints
-│   └── models/          # Pydantic schemas
+│   ├── core/            # Config, logging, startup checks
+│   ├── middleware/      # Rate limiting, logging middleware
+│   ├── models/          # Pydantic schemas
+│   ├── services/        # Cache, metrics services
+│   ├── tools/           # arXiv, Tavily, Wikipedia integrations
+│   └── workflows/       # Orchestration logic
+├── tests/               # Pytest suite (>70% coverage)
+├── Dockerfile           # Multi-stage production build
 └── main.py              # FastAPI application
 
 frontend/
 ├── src/
 │   ├── components/      # Reusable UI components
 │   ├── pages/           # Route handlers
-│   └── services/        # API client layer
+│   └── services/        # API client
+├── Dockerfile           # Nginx production build
 └── package.json
+
+terraform/               # Infrastructure as Code
+.github/workflows/       # CI/CD automation
+docker-compose.yml       # Local development stack
 ```
 
 ## Installation
@@ -267,23 +308,23 @@ See `DOCKER.md` for advanced Docker usage.
 ## API Usage
 
 **Reflection Workflow**
-```bash
-curl -X POST http://localhost:8000/api/v1/workflows/reflection \
-  -H "Content-Type: application/json" \
+```powershell
+curl -X POST http://localhost:8000/api/v1/workflows/reflection `
+  -H "Content-Type: application/json" `
   -d '{"topic": "AI Ethics in Healthcare"}'
 ```
 
 **Research Workflow**
-```bash
-curl -X POST http://localhost:8000/api/v1/workflows/tool-research \
-  -H "Content-Type: application/json" \
+```powershell
+curl -X POST http://localhost:8000/api/v1/workflows/tool-research `
+  -H "Content-Type: application/json" `
   -d '{"topic": "Quantum Computing Applications", "tools": ["arxiv", "wikipedia"]}'
 ```
 
 **Multi-Agent Workflow**
-```bash
-curl -X POST http://localhost:8000/api/v1/workflows/multi-agent \
-  -H "Content-Type: application/json" \
+```powershell
+curl -X POST http://localhost:8000/api/v1/workflows/multi-agent `
+  -H "Content-Type: application/json" `
   -d '{"topic": "Climate Change Modeling", "max_steps": 4}'
 ```
 
@@ -313,7 +354,7 @@ CACHE_ENABLED=False
 
 **Test rate limiting:**
 ```powershell
-.\test_rate_limit.ps1
+.\backend\test_rate_limit.ps1
 ```
 
 **Adjust limits** in `.env`:
@@ -325,8 +366,7 @@ RATE_LIMIT_WINDOW_SECONDS=900  # 15 minutes
 ## Performance Metrics
 
 **Track workflow performance:**
-```bash
-# Get metrics summary
+```powershell
 curl http://localhost:8000/api/v1/metrics/summary
 ```
 
@@ -446,6 +486,25 @@ pytest tests/ --cov=app --cov-report=html
 3. Push to `main` branch triggers deployment
 
 See `.github/CI_CD.md` for complete configuration guide.
+
+## Infrastructure as Code
+
+**Terraform for automated Render provisioning:**
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+**Provisions:**
+- Backend web service (Docker)
+- Frontend static site
+- Environment variables
+- Auto-deploy configuration
+
+See `terraform/README.md` for complete IaC guide.
 
 ## License
 
