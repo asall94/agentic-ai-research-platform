@@ -25,6 +25,12 @@ build/
 *.log
 terraform-*
 
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars
+
 # OS
 .DS_Store
 Thumbs.db

@@ -33,13 +33,19 @@ resource "azurerm_container_app_environment" "main" {
 
 # Container Registry (pour stocker images Docker)
 resource "azurerm_container_registry" "main" {
-  name                = "acr${replace(var.project_name, "-", "")}"
+  name                = "acr${replace(var.project_name, "-", "")}${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Basic"
   admin_enabled       = true
 
   tags = azurerm_resource_group.main.tags
+}
+
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
 }
 
 # Backend Container App
