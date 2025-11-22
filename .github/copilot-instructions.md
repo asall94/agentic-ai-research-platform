@@ -3,8 +3,17 @@
 ## Project Overview
 Multi-agent research platform implementing three distinct agentic workflows: Simple Reflection (draft→critique→revision), Tool Research (search→reflect→export), and Multi-Agent Orchestration (plan→research→write→edit). Built with FastAPI backend and React frontend.
 
+## Critical Workflow Rule
+**NEVER code implementation before explicit user approval.** When user asks for new features:
+1. Analyze requirements and propose solution architecture
+2. List files to create/modify with brief explanation
+3. Wait for user confirmation ("go ahead", "implement", etc.)
+4. Only then proceed with code changes
+
+Exception: Bug fixes and direct code correction requests can be implemented immediately.
+
 ## Communication Style
-**All code, documentation, and scripts must be concise, direct, expertise-oriented, up-to-date on Agentic AItechnology, and professional without emojis.**
+**All code, documentation, and scripts must be concise, direct, expertise-oriented, up-to-date on Agentic AI technology, and professional without emojis.**
 - Scripts: No decorative emojis in comments, output messages, or logs
 - Documentation: Professional technical writing only
 - User-facing messages: Clear and formal communication

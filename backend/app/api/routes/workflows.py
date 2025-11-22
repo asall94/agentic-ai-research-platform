@@ -11,13 +11,14 @@ from app.workflows.simple_reflection import SimpleReflectionWorkflow
 from app.workflows.tool_research import ToolResearchWorkflow
 from app.workflows.multi_agent import MultiAgentWorkflow
 from app.services.cache_service import cache_service
+from app.services.metrics_service import metrics_service
+from app.core.logging_config import StructuredLogger
 from datetime import datetime
 import time
 import uuid
-import logging
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = StructuredLogger(__name__)
 
 
 @router.post("/reflection", response_model=ReflectionWorkflowResponse)
@@ -28,7 +29,12 @@ async def execute_reflection_workflow(request: ReflectionWorkflowRequest):
     start_time = time.time()
     
     try:
-        logger.info(f"Starting reflection workflow {workflow_id} for topic: {request.topic}")
+        logger.info(
+            "Starting reflection workflow",
+            workflow_id=workflow_id,
+            workflow_type="simple_reflection",
+            topic=request.topic
+        )
         
         # Check cache
         cached_result = cache_service.get_cached_result(request.topic, "reflection")
@@ -58,6 +64,16 @@ async def execute_reflection_workflow(request: ReflectionWorkflowRequest):
         
         # Store in cache
         cache_service.store_result(request.topic, "reflection", result)
+        
+        # Track metrics
+        metrics_service.track_workflow(
+            workflow_type="simple_reflection",
+            topic=request.topic,
+            execution_time=execution_time,
+            cache_hit=False,
+            steps_count=3,
+            agents_used=["draft", "reflection", "revision"]
+        )
         
         return ReflectionWorkflowResponse(
             workflow_id=workflow_id,

@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     CACHE_SIMILARITY_THRESHOLD: float = 0.95
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     
+    # Rate limiting
+    RATE_LIMIT_REQUESTS: int = 100
+    RATE_LIMIT_WINDOW_SECONDS: int = 900
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

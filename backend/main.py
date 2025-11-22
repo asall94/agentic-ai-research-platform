@@ -2,23 +2,21 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-import logging
 import sys
 from dotenv import load_dotenv
 
-from app.api.routes import workflows, health, cache
+from app.api.routes import workflows, health, cache, metrics
 from app.core.config import settings
 from app.core.startup_checks import check_requirements
+from app.core.logging_config import setup_json_logging, StructuredLogger
+from app.middleware import RateLimiter, LoggingMiddleware
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure JSON logging
+setup_json_logging(settings.LOG_LEVEL)
+logger = StructuredLogger(__name__)
 
 # Run startup checks
 if not check_requirements():
@@ -51,10 +49,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Logging middleware (before rate limiter)
+app.add_middleware(LoggingMiddleware)
+
+# Rate limiting
+app.add_middleware(
+    RateLimiter,
+    requests_per_window=settings.RATE_LIMIT_REQUESTS,
+    window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS
+)
+
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["workflows"])
 app.include_router(cache.router, prefix="/api/v1/cache", tags=["cache"])
+app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["metrics"])
 
 
 @app.get("/")
