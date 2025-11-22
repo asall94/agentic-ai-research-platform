@@ -86,7 +86,8 @@ class TestRateLimiting:
     
     def test_rate_limit_headers_present(self):
         """Rate limit headers should be present in response"""
-        response = client.get("/api/v1/health")
+        # Health endpoint bypasses rate limiting, use metrics instead
+        response = client.get("/api/v1/metrics/summary")
         
         assert "X-RateLimit-Limit" in response.headers
         assert "X-RateLimit-Remaining" in response.headers
@@ -94,14 +95,13 @@ class TestRateLimiting:
     
     def test_rate_limit_decrements(self):
         """Rate limit remaining should decrement with each request"""
-        response1 = client.get("/api/v1/health")
+        response1 = client.get("/api/v1/metrics/summary")
         remaining1 = int(response1.headers["X-RateLimit-Remaining"])
         
-        response2 = client.get("/api/v1/health")
+        response2 = client.get("/api/v1/metrics/summary")
         remaining2 = int(response2.headers["X-RateLimit-Remaining"])
         
-        # Note: This test may be flaky due to time windows
-        # In production, use a dedicated test client with isolated rate limiter
+        # Should decrement or stay same (time window reset)
         assert remaining2 <= remaining1
 
 
@@ -143,10 +143,10 @@ class TestCORSHeaders:
     
     def test_cors_headers_present(self):
         """CORS headers should be present in response"""
-        response = client.options("/api/v1/health")
+        # Test with actual GET request and Origin header
+        response = client.get("/api/v1/health", headers={"Origin": "http://localhost:3000"})
         
-        # Check for CORS headers (may vary based on config)
-        assert response.status_code in [200, 204]
+        assert response.status_code == 200
 
 
 class TestErrorHandling:

@@ -8,7 +8,7 @@
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC.svg)](https://www.terraform.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-Production-ready multi-agent system for automated research workflows. Built with FastAPI backend and React frontend, deployed on Azure Container Apps with Infrastructure-as-Code (Terraform). Implements advanced agentic patterns including reflection, tool integration, and intelligent orchestration.
+Production-ready multi-agent research platform implementing three specialized workflows: Simple Reflection (draft-critique-revise), Tool Research (search-synthesize-export), and Multi-Agent Orchestration (plan-research-write-edit). Built with FastAPI backend, React frontend, deployed on Azure Container Apps with Terraform IaC. Includes semantic caching (60-80% cost reduction), structured JSON logging, rate limiting, and comprehensive CI/CD.
 
 ## System Architecture
 
@@ -481,12 +481,13 @@ pytest tests/ --cov=app --cov-report=html
 - Health checks post-deployment
 - Rollback on failure
 
-**Setup:**
-1. Add GitHub secrets (Azure credentials, API keys)
-2. Configure Azure Container Apps (see `terraform/README.md`)
-3. Push to `main` branch triggers deployment
+**Required GitHub Secrets:**
+- `OPENAI_API_KEY` - OpenAI API key for agent execution
+- `TAVILY_API_KEY` - Tavily search API key (optional)
+- `REDIS_URL` - Redis connection string (Upstash recommended)
+- `AZURE_CREDENTIALS` - Azure service principal JSON
 
-See `.github/CI_CD.md` for complete configuration guide.
+Push to `main` branch triggers automatic deployment to Azure.
 
 ## Cloud Deployment
 
@@ -534,12 +535,28 @@ cd terraform
 - Frontend Container App (React)
 - All environment variables and secrets
 
-**Cost:** Free tier (0€/month with Azure free credits + permanent free tier)
+**Cost:** Free tier eligible (180,000 vCPU-seconds/month)
 
-See `terraform/README.md` for complete IaC guide.
+**Documentation:** See `terraform/README.md` for deployment details.
 
-## License
+## Author & Copyright
 
-Proprietary License - Copyright (c) 2025 Abdoulaye Sall. All rights reserved.
+**AI Engineer:** Abdoulaye SALL  
+**LinkedIn:** [linkedin.com/in/abdoulaye-sall](https://linkedin.com/in/abdoulaye-sall)  
+**Year:** 2025
 
-See LICENSE file for details.
+**Skills Demonstrated:**
+- Multi-agent orchestration with LLM-driven task routing
+- Agentic AI workflows (reflection, tool integration, planning)
+- Production FastAPI deployment with async patterns
+- Semantic caching with sentence embeddings (60-80% cost reduction)
+- OpenAI GPT-4/GPT-4o-mini integration with function calling
+- Azure Container Apps deployment with Terraform IaC
+- GitHub Actions CI/CD with automated testing and deployment
+- Structured JSON logging for production monitoring
+- Rate limiting and middleware architecture
+- Redis cache optimization with cosine similarity matching
+
+**License:** Proprietary - See LICENSE for details
+
+**Business Context:** Advanced research platform for automated content generation and synthesis

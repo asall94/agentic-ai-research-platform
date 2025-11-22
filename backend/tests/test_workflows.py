@@ -77,7 +77,7 @@ class TestToolResearchWorkflow:
     
     @pytest.mark.asyncio
     async def test_execute_returns_dict_with_research_key(self):
-        """Workflow should return dict with research key"""
+        """Workflow should return dict with research_report key"""
         workflow = ToolResearchWorkflow()
         
         with patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
@@ -86,20 +86,20 @@ class TestToolResearchWorkflow:
             result = await workflow.execute("Quantum computing")
             
             assert isinstance(result, dict)
-            assert "research" in result
-            assert result["research"] == "Research findings"
+            assert "research_report" in result
+            assert result["research_report"] == "Research findings"
     
     @pytest.mark.asyncio
     async def test_execute_passes_tools_to_agent(self):
-        """Workflow should pass tools parameter to research agent"""
-        workflow = ToolResearchWorkflow()
+        """Workflow should use tools specified in constructor"""
+        workflow = ToolResearchWorkflow(tools=["arxiv", "wikipedia"])
         
         with patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
             mock_research.return_value = "Research with tools"
             
-            await workflow.execute("Topic", tools=["arxiv", "wikipedia"])
+            await workflow.execute("Topic")
             
-            # Verify agent was called with tools
+            # Verify agent was called
             mock_research.assert_called_once()
 
 
@@ -137,6 +137,8 @@ class TestMultiAgentWorkflow:
                 
                 assert isinstance(result, dict)
                 assert "plan" in result
+                assert "history" in result
+                assert "final_report" in result
                 assert "steps" in result
                 assert "final_output" in result
     
@@ -145,14 +147,24 @@ class TestMultiAgentWorkflow:
         """Workflow should limit execution to max_steps"""
         workflow = MultiAgentWorkflow(max_steps=2)
         
-        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner:
-            mock_planner.return_value = ["Step1", "Step2", "Step3", "Step4"]
+        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
+             patch('app.workflows.multi_agent.OpenAI') as mock_openai, \
+             patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
             
-            with patch('openai.OpenAI'):
-                result = await workflow.execute("Topic")
-                
-                # Should only execute 2 steps even though planner returned 4
-                assert len(result.get("history", [])) <= 2
+            mock_planner.return_value = ["Step1", "Step2", "Step3", "Step4"]
+            mock_research.return_value = "Done"
+            
+            # Mock OpenAI client
+            mock_client = Mock()
+            mock_response = Mock()
+            mock_response.choices = [Mock(message=Mock(content='{"agent": "research_agent", "task": "Do research"}'))]
+            mock_client.chat.completions.create.return_value = mock_response
+            mock_openai.return_value = mock_client
+            
+            result = await workflow.execute("Topic")
+            
+            # Should only execute 2 steps even though planner returned 4
+            assert len(result.get("history", [])) <= 2
 
 
 class TestWorkflowErrorHandling:
