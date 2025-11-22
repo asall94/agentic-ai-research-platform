@@ -93,19 +93,34 @@ jobs:
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
     
+    - name: Get ACR credentials
+      id: acr-creds
+      run: |
+        ACR_USERNAME=$(az acr credential show --name acragenticai5fxa66 --query username -o tsv)
+        ACR_PASSWORD=$(az acr credential show --name acragenticai5fxa66 --query "passwords[0].value" -o tsv)
+        echo "username=$ACR_USERNAME" >> $GITHUB_OUTPUT
+        echo "::add-mask::$ACR_PASSWORD"
+        echo "password=$ACR_PASSWORD" >> $GITHUB_OUTPUT
+    
     - name: Update backend Container App
       run: |
         az containerapp update \
           --name ${{ env.BACKEND_APP }} \
           --resource-group ${{ env.RESOURCE_GROUP }} \
-          --image ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          --image ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
+          --registry-server ${{ env.AZURE_REGISTRY }} \
+          --registry-username ${{ steps.acr-creds.outputs.username }} \
+          --registry-password ${{ steps.acr-creds.outputs.password }}
     
     - name: Update frontend Container App
       run: |
         az containerapp update \
           --name ${{ env.FRONTEND_APP }} \
           --resource-group ${{ env.RESOURCE_GROUP }} \
-          --image ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          --image ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
+          --registry-server ${{ env.AZURE_REGISTRY }} \
+          --registry-username ${{ steps.acr-creds.outputs.username }} \
+          --registry-password ${{ steps.acr-creds.outputs.password }}
     
     - name: Health check backend
       continue-on-error: true
