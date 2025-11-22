@@ -11,8 +11,8 @@ env:
   BACKEND_IMAGE: backend
   FRONTEND_IMAGE: frontend
   RESOURCE_GROUP: rg-agentic-ai-research
-  BACKEND_APP: backend
-  FRONTEND_APP: frontend
+  BACKEND_APP: ca-agentic-ai-backend
+  FRONTEND_APP: ca-agentic-ai-frontend
 
 jobs:
   test:
@@ -75,12 +75,21 @@ jobs:
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
     
+    - name: Get backend URL
+      id: backend-url
+      run: |
+        BACKEND_URL=$(az containerapp show \
+          --name ${{ env.BACKEND_APP }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query properties.configuration.ingress.fqdn -o tsv)
+        echo "url=https://${BACKEND_URL}/api/v1" >> $GITHUB_OUTPUT
+    
     - name: Build and push frontend image
       working-directory: ./frontend
       run: |
         docker build -t ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
                      -t ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest \
-                     --build-arg REACT_APP_API_URL=https://ca-agentic-ai-backend.livelydune-8ed54566.westeurope.azurecontainerapps.io .
+                     --build-arg REACT_APP_API_URL=${{ steps.backend-url.outputs.url }} .
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
     

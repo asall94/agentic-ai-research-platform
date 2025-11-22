@@ -10,6 +10,8 @@
 
 Production-ready multi-agent research platform implementing three specialized workflows: Simple Reflection (draft-critique-revise), Tool Research (search-synthesize-export), and Multi-Agent Orchestration (plan-research-write-edit). Built with FastAPI backend, React frontend, deployed on Azure Container Apps with Terraform IaC. Includes semantic caching (60-80% cost reduction), structured JSON logging, rate limiting, and comprehensive CI/CD.
 
+**Live Demo:** https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io
+
 ## System Architecture
 
 ```mermaid
