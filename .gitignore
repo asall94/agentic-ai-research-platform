@@ -23,6 +23,7 @@ build/
 
 # Logs
 *.log
+terraform-*
 
 # OS
 .DS_Store

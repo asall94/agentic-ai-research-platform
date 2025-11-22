@@ -10,6 +10,12 @@ param(
 $ErrorActionPreference = "Stop"
 $LogFile = "terraform-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
+# Rotate old logs (keep last 5)
+Get-ChildItem -Filter "terraform-*.log" | 
+    Sort-Object LastWriteTime -Descending | 
+    Select-Object -Skip 5 | 
+    Remove-Item -Force -ErrorAction SilentlyContinue
+
 function Write-Log {
     param([string]$Message)
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"

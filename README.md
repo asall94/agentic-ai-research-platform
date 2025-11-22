@@ -207,8 +207,6 @@ See [Installation](#installation) for detailed setup.
 
 ## Project Structure
 
-## Project Structure
-
 ```
 backend/
 ├── app/
@@ -247,10 +245,10 @@ docker-compose.yml       # Local development stack
 - Tavily API key (optional) 
 
 **Backend Setup**
-```bash
+```powershell
 cd backend
 python -m venv venv
-.\venv\Scripts\activate  # Windows
+.\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -276,7 +274,7 @@ redis-server
 ```
 
 **Frontend Setup**
-```bash
+```powershell
 cd frontend
 npm install
 ```
@@ -284,7 +282,7 @@ npm install
 ## Running
 
 **Option 1: Docker (Recommended)**
-```bash
+```powershell
 .\docker-start.ps1
 ```
 All services start automatically: http://localhost:3000
@@ -292,7 +290,7 @@ All services start automatically: http://localhost:3000
 **Option 2: Manual**
 
 **Start Backend** (Terminal 1)
-```bash
+```powershell
 cd backend
 .\venv\Scripts\activate
 python main.py
@@ -300,7 +298,7 @@ python main.py
 Server runs on http://localhost:8000
 
 **Start Frontend** (Terminal 2)
-```bash
+```powershell
 cd frontend
 npm start
 ```
@@ -336,7 +334,7 @@ curl -X POST http://localhost:8000/api/v1/workflows/multi-agent `
 - Alternative view: http://localhost:8000/redoc
 
 **Cache Management**
-```bash
+```powershell
 # Get cache statistics
 curl http://localhost:8000/api/v1/cache/stats
 
@@ -457,7 +455,7 @@ LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
 **Coverage report:** Generated in `backend/htmlcov/index.html`
 
 **Manual testing:**
-```bash
+```powershell
 # Install test dependencies
 pip install pytest pytest-asyncio pytest-cov
 
@@ -485,7 +483,7 @@ pytest tests/ --cov=app --cov-report=html
 
 **Setup:**
 1. Add GitHub secrets (Azure credentials, API keys)
-2. Configure Azure Container Apps (see `DEPLOYMENT.md`)
+2. Configure Azure Container Apps (see `terraform/README.md`)
 3. Push to `main` branch triggers deployment
 
 See `.github/CI_CD.md` for complete configuration guide.
@@ -505,7 +503,7 @@ See `.github/CI_CD.md` for complete configuration guide.
 3. Login: `az login`
 4. Deploy: `cd terraform && .\deploy.ps1 -Action apply`
 
-See `DEPLOYMENT.md` for detailed Azure setup guide.
+See `terraform/README.md` for detailed Azure setup guide.
 
 ## Infrastructure as Code
 
@@ -536,7 +534,7 @@ cd terraform
 - Frontend Container App (React)
 - All environment variables and secrets
 
-**Cost:** Free tier (0€/mois with Azure free credits + permanent free tier)
+**Cost:** Free tier (0€/month with Azure free credits + permanent free tier)
 
 See `terraform/README.md` for complete IaC guide.
 
