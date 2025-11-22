@@ -143,18 +143,16 @@ class TestMultiAgentWorkflow:
     @pytest.mark.asyncio
     async def test_execute_respects_max_steps(self):
         """Workflow should limit execution to max_steps"""
-        workflow = MultiAgentWorkflow()
+        workflow = MultiAgentWorkflow(max_steps=2)
         
         with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner:
-            mock_planner.return_value = ["Step1", "Step2"]
+            mock_planner.return_value = ["Step1", "Step2", "Step3", "Step4"]
             
             with patch('openai.OpenAI'):
-                result = await workflow.execute("Topic", max_steps=2)
+                result = await workflow.execute("Topic")
                 
-                # Planner should be called with max_steps
-                mock_planner.assert_called_once()
-                call_kwargs = mock_planner.call_args[1]
-                assert call_kwargs.get('max_steps') == 2
+                # Should only execute 2 steps even though planner returned 4
+                assert len(result.get("history", [])) <= 2
 
 
 class TestWorkflowErrorHandling:
