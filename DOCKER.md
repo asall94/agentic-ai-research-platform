@@ -15,17 +15,17 @@ Services available at:
 ## Manual Docker Commands
 
 **Build images:**
-```bash
+```powershell
 docker-compose build
 ```
 
 **Start services:**
-```bash
+```powershell
 docker-compose up -d
 ```
 
 **View logs:**
-```bash
+```powershell
 # All services
 docker-compose logs -f
 
@@ -35,12 +35,12 @@ docker-compose logs -f frontend
 ```
 
 **Stop services:**
-```bash
+```powershell
 docker-compose down
 ```
 
 **Rebuild after code changes:**
-```bash
+```powershell
 docker-compose up --build -d
 ```
 
@@ -59,19 +59,25 @@ RATE_LIMIT_WINDOW_SECONDS=900
 ## Production Deployment
 
 **Build for production:**
-```bash
+```powershell
 docker-compose -f docker-compose.yml build --no-cache
 ```
 
-**Push to registry:**
-```bash
+**Push to Azure Container Registry:**
+```powershell
+# Get ACR name from Terraform output
+$ACR_NAME = terraform output -raw container_registry_url
+
+# Login to ACR
+az acr login --name acragenticai
+
 # Tag images
-docker tag agentic-backend:latest your-registry/agentic-backend:latest
-docker tag agentic-frontend:latest your-registry/agentic-frontend:latest
+docker tag agentic-backend:latest $ACR_NAME/backend:latest
+docker tag agentic-frontend:latest $ACR_NAME/frontend:latest
 
 # Push
-docker push your-registry/agentic-backend:latest
-docker push your-registry/agentic-frontend:latest
+docker push $ACR_NAME/backend:latest
+docker push $ACR_NAME/frontend:latest
 ```
 
 ## Architecture
@@ -116,25 +122,25 @@ docker push your-registry/agentic-frontend:latest
 ## Troubleshooting
 
 **Backend won't start:**
-```bash
+```powershell
 docker-compose logs backend
 # Check API keys in .env
 ```
 
 **Frontend can't reach backend:**
-```bash
+```powershell
 # Verify REACT_APP_API_URL in docker-compose.yml
 # Should be http://localhost:8000/api/v1
 ```
 
 **Redis connection failed:**
-```bash
+```powershell
 docker-compose ps redis
 # Check Redis health status
 ```
 
 **Clear everything and restart:**
-```bash
+```powershell
 docker-compose down -v
 docker-compose up --build -d
 ```

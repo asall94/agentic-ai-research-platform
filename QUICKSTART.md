@@ -93,10 +93,10 @@ curl -X POST http://localhost:8000/api/v1/workflows/reflection `
 
 **Frontend errors:**
 ```powershell
-rm -r node_modules
+Remove-Item node_modules -Recurse -Force
 npm install
 ```
 
 ## Deployment
 
-See README.md for Render deployment instructions.
+See `terraform/README.md` for Azure Container Apps deployment with Terraform.
