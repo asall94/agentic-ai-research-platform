@@ -74,7 +74,7 @@ jobs:
       run: npm run build
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-build
         path: frontend/build/
@@ -97,8 +97,6 @@ jobs:
         file: ./backend/Dockerfile
         push: false
         tags: agentic-backend:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
     
     - name: Build frontend image
       uses: docker/build-push-action@v5
@@ -107,5 +105,3 @@ jobs:
         file: ./frontend/Dockerfile
         push: false
         tags: agentic-frontend:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max

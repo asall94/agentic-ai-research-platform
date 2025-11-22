@@ -58,3 +58,6 @@ htmlcov/
 # Temporary
 *.tmp
 *.bak
+
+# AI instructions (keep local only)
+.github/copilot-instructions.md

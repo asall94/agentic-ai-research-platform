@@ -1,6 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
+import sys
+import os
+
+# Mock startup checks before importing main
+sys.modules['app.core.startup_checks'] = type(sys)('app.core.startup_checks')
+sys.modules['app.core.startup_checks'].check_requirements = lambda: True
+
 from main import app
 
 client = TestClient(app)
