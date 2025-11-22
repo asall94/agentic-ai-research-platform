@@ -80,7 +80,7 @@ jobs:
       run: |
         docker build -t ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
                      -t ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest \
-                     --build-arg REACT_APP_API_URL=https://backend.salmonisland-e4ab0adb.westeurope.azurecontainerapps.io .
+                     --build-arg REACT_APP_API_URL=https://ca-agentic-ai-backend.livelydune-8ed54566.westeurope.azurecontainerapps.io .
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
         docker push ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
     
