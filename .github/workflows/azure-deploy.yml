@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_REGISTRY: acragenticai.azurecr.io
+  AZURE_REGISTRY: acragenticai5fxa66.azurecr.io
   BACKEND_IMAGE: backend
   FRONTEND_IMAGE: frontend
   RESOURCE_GROUP: rg-agentic-ai-research
@@ -65,7 +65,7 @@ jobs:
     
     - name: Login to Azure Container Registry
       run: |
-        az acr login --name acragenticai
+        az acr login --name acragenticai5fxa66
     
     - name: Build and push backend image
       working-directory: ./backend
