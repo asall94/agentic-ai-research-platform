@@ -111,7 +111,18 @@ class TestMultiAgentWorkflow:
         """Workflow should return dict with plan, steps, final_output"""
         workflow = MultiAgentWorkflow()
         
-        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner:
+        # Mock _decide_agent to avoid OpenAI calls
+        async def mock_decide_agent(step):
+            if "Research" in step:
+                return {"agent": "research_agent", "task": step}
+            elif "Write" in step:
+                return {"agent": "writer_agent", "task": step}
+            else:
+                return {"agent": "editor_agent", "task": step}
+        
+        with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
+             patch.object(workflow, '_decide_agent', side_effect=mock_decide_agent):
+            
             # Mock planner to return steps
             mock_planner.return_value = ["Research", "Write", "Edit"]
             
@@ -136,7 +147,12 @@ class TestMultiAgentWorkflow:
         """Workflow should limit execution to max_steps"""
         workflow = MultiAgentWorkflow(max_steps=2)
         
+        # Mock _decide_agent
+        async def mock_decide_agent(step):
+            return {"agent": "research_agent", "task": step}
+        
         with patch('app.agents.planner_agent.PlannerAgent.execute', new_callable=AsyncMock) as mock_planner, \
+             patch.object(workflow, '_decide_agent', side_effect=mock_decide_agent), \
              patch('app.agents.research_agent.ResearchAgent.execute', new_callable=AsyncMock) as mock_research:
             
             # Mock planner returns 4 steps but workflow should limit to 2
