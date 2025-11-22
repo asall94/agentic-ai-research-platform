@@ -15,6 +15,8 @@ os.environ["LOG_LEVEL"] = "ERROR"
 
 # Mock OpenAI globally before any imports
 mock_openai_module = MagicMock()
+mock_openai_module.__spec__ = MagicMock()
+mock_openai_module.__spec__.name = 'openai'
 mock_client_instance = MagicMock()
 mock_response = MagicMock()
 mock_message = MagicMock()
