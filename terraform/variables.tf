@@ -1,8 +1,25 @@
-variable "render_api_key" {
-  description = "Render API key for authentication"
+variable "azure_subscription_id" {
+  description = "Azure subscription ID"
   type        = string
-  sensitive   = true
-  default     = ""
+  default     = "9b002981-82da-4e3f-b671-dac15978db4c"
+}
+
+variable "resource_group_name" {
+  description = "Azure resource group name"
+  type        = string
+  default     = "rg-agentic-ai-research"
+}
+
+variable "location" {
+  description = "Azure region"
+  type        = string
+  default     = "westeurope"
+}
+
+variable "project_name" {
+  description = "Project name (used for naming resources)"
+  type        = string
+  default     = "agentic-ai"
 }
 
 variable "openai_api_key" {
@@ -23,25 +40,6 @@ variable "redis_url" {
   type        = string
   sensitive   = true
   default     = "redis://localhost:6379"
-}
-
-variable "backend_name" {
-  description = "Name for backend service"
-  type        = string
-  default     = "agentic-ai-backend"
-}
-
-variable "frontend_name" {
-  description = "Name for frontend service"
-  type        = string
-  default     = "agentic-ai-frontend"
-}
-
-variable "region" {
-  description = "Render deployment region"
-  type        = string
-  default     = "oregon"
-  # Options: oregon, frankfurt, singapore, ohio
 }
 
 variable "environment" {

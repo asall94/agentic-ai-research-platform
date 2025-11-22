@@ -2,14 +2,14 @@ terraform {
   required_version = ">= 1.0"
   
   required_providers {
-    render = {
-      source  = "render-oss/render"
-      version = "~> 1.0"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.80"
     }
   }
 }
 
-provider "render" {
-  # API key from environment variable RENDER_API_KEY
-  # or set via: export RENDER_API_KEY=your_key
+provider "azurerm" {
+  features {}
+  subscription_id = var.azure_subscription_id
 }

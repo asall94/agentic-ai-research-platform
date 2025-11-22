@@ -1,26 +1,36 @@
 output "backend_url" {
-  description = "Backend service URL"
-  value       = "https://${render_web_service.backend.service_url}"
+  description = "Backend API URL"
+  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}"
 }
 
 output "frontend_url" {
-  description = "Frontend static site URL"
-  value       = "https://${render_static_site.frontend.service_url}"
+  description = "Frontend application URL"
+  value       = "https://${azurerm_container_app.frontend.ingress[0].fqdn}"
 }
 
-output "backend_service_id" {
-  description = "Backend service ID (for GitHub secrets)"
-  value       = render_web_service.backend.id
+output "resource_group_name" {
+  description = "Azure resource group name"
+  value       = azurerm_resource_group.main.name
+}
+
+output "container_registry_url" {
+  description = "Azure Container Registry login server"
+  value       = azurerm_container_registry.main.login_server
+}
+
+output "container_registry_username" {
+  description = "Container Registry admin username"
+  value       = azurerm_container_registry.main.admin_username
   sensitive   = true
 }
 
-output "frontend_service_id" {
-  description = "Frontend service ID (for GitHub secrets)"
-  value       = render_static_site.frontend.id
+output "container_registry_password" {
+  description = "Container Registry admin password"
+  value       = azurerm_container_registry.main.admin_password
   sensitive   = true
 }
 
 output "health_check_url" {
   description = "Backend health check endpoint"
-  value       = "https://${render_web_service.backend.service_url}/api/v1/health"
+  value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api/v1/health"
 }

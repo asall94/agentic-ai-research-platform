@@ -33,25 +33,62 @@ notepad terraform.tfvars
 
 ## Quick Start
 
-**Initialize Terraform:**
-```bash
+**Using deployment script (recommended):**
+```powershell
+# 1. Configure secrets
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your API keys
+
+# 2. Initialize
+.\deploy.ps1 -Action init
+
+# 3. Preview changes
+.\deploy.ps1 -Action plan
+
+# 4. Deploy
+.\deploy.ps1 -Action apply
+
+# 5. Get URLs
+.\deploy.ps1 -Action output
+```
+
+**Manual Terraform commands:**
+```powershell
 cd terraform
 terraform init
-```
-
-**Preview changes:**
-```bash
 terraform plan
-```
-
-**Deploy infrastructure:**
-```bash
 terraform apply
+terraform output
 ```
 
 **Destroy infrastructure:**
-```bash
-terraform destroy
+```powershell
+.\deploy.ps1 -Action destroy
+# Or: terraform destroy
+```
+
+## Deployment Script Features
+
+**`deploy.ps1` provides:**
+- Automated validation (checks terraform.tfvars for placeholders)
+- Timestamped logs (`terraform-YYYYMMDD-HHMMSS.log`)
+- Error handling with exit codes
+- Confirmation prompts for destructive operations
+- Combined console + file logging
+
+**Actions:**
+- `init` - Download Render provider
+- `plan` - Preview changes (dry-run)
+- `apply` - Create/update infrastructure
+- `destroy` - Delete all resources
+- `output` - Show deployment URLs
+
+**Example logs:**
+```
+[2025-11-22 14:30:25] Starting Terraform apply operation
+[2025-11-22 14:30:26] terraform.tfvars validation passed
+[2025-11-22 14:32:15] Infrastructure deployed successfully
+[2025-11-22 14:32:16] Backend URL: https://agentic-ai-backend.onrender.com
 ```
 
 ## Configuration

@@ -4,9 +4,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2-61dafb.svg)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)](https://www.docker.com/)
+[![Azure](https://img.shields.io/badge/Azure-Container%20Apps-0078D4.svg)](https://azure.microsoft.com/services/container-apps/)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC.svg)](https://www.terraform.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-Production-ready multi-agent system for automated research workflows. Built with FastAPI backend and React frontend, implementing advanced agentic patterns including reflection, tool integration, and intelligent orchestration.
+Production-ready multi-agent system for automated research workflows. Built with FastAPI backend and React frontend, deployed on Azure Container Apps with Infrastructure-as-Code (Terraform). Implements advanced agentic patterns including reflection, tool integration, and intelligent orchestration.
 
 ## System Architecture
 
@@ -174,10 +176,11 @@ graph LR
 **Production-Grade Stack**
 - Backend: FastAPI with async support, OpenAI integration, structured logging
 - Frontend: React with TailwindCSS, real-time monitoring, responsive design
+- Cloud: Azure Container Apps with auto-scaling, monitoring, and managed identities
 - Integration: arXiv API, Tavily search, Wikipedia, OpenAI GPT-4/GPT-4o-mini
-- Cache: Redis with semantic similarity matching (60-80% cost reduction)
+- Cache: Redis (Upstash) with semantic similarity matching (60-80% cost reduction)
 - Rate Limiting: 100 requests/15min per IP (configurable)
-- DevOps: Docker multi-stage builds, GitHub Actions CI/CD, Terraform IaC
+- DevOps: Docker multi-stage builds, GitHub Actions CI/CD, Terraform IaC (Azure)
 - Export: HTML, Markdown, JSON formats
 
 ## Quick Start
@@ -475,34 +478,65 @@ pytest tests/ --cov=app --cov-report=html
 - Docker: Test image builds without pushing
 
 **Continuous Deployment (on main push):**
-- Auto-deploy backend to Render
-- Auto-deploy frontend to Render  
+- Build and push Docker images to Azure Container Registry
+- Deploy to Azure Container Apps via Terraform
 - Health checks post-deployment
 - Rollback on failure
 
 **Setup:**
-1. Add GitHub secrets (API keys, Render service IDs)
-2. Configure Render services (see `DEPLOYMENT.md`)
+1. Add GitHub secrets (Azure credentials, API keys)
+2. Configure Azure Container Apps (see `DEPLOYMENT.md`)
 3. Push to `main` branch triggers deployment
 
 See `.github/CI_CD.md` for complete configuration guide.
 
+## Cloud Deployment
+
+**Azure Container Apps features:**
+- Auto-scaling (0-2 replicas based on load)
+- Managed HTTPS certificates
+- Application Insights integration
+- Zero-downtime deployments
+- Free tier: 180,000 vCPU-seconds/month
+
+**Getting started:**
+1. Create Azure account: https://azure.microsoft.com/free
+2. Install Azure CLI: `winget install Microsoft.AzureCLI`
+3. Login: `az login`
+4. Deploy: `cd terraform && .\deploy.ps1 -Action apply`
+
+See `DEPLOYMENT.md` for detailed Azure setup guide.
+
 ## Infrastructure as Code
 
-**Terraform for automated Render provisioning:**
+**Terraform for Azure Container Apps deployment:**
 
-```bash
+```powershell
 cd terraform
-terraform init
-terraform plan
-terraform apply
+
+# Initialize Terraform
+.\deploy.ps1 -Action init
+
+# Preview infrastructure changes
+.\deploy.ps1 -Action plan
+
+# Deploy to Azure
+.\deploy.ps1 -Action apply
+
+# Get deployment URLs
+.\deploy.ps1 -Action output
 ```
 
-**Provisions:**
-- Backend web service (Docker)
-- Frontend static site
-- Environment variables
-- Auto-deploy configuration
+**Provisions automatically:**
+- Resource Group (`rg-agentic-ai-research`)
+- Log Analytics Workspace (monitoring)
+- Container App Environment
+- Azure Container Registry (Docker images)
+- Backend Container App (FastAPI)
+- Frontend Container App (React)
+- All environment variables and secrets
+
+**Cost:** Free tier (0€/mois with Azure free credits + permanent free tier)
 
 See `terraform/README.md` for complete IaC guide.
 
