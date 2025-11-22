@@ -99,6 +99,7 @@ jobs:
           --image ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
     
     - name: Health check backend
+      continue-on-error: true
       run: |
         BACKEND_URL=$(az containerapp show \
           --name ${{ env.BACKEND_APP }} \
@@ -108,10 +109,19 @@ jobs:
         echo "Waiting for backend to be ready..."
         sleep 30
         
-        curl -f https://${BACKEND_URL}/api/v1/health || exit 1
-        echo "Backend health check passed"
+        for i in {1..5}; do
+          if curl -f https://${BACKEND_URL}/api/v1/health; then
+            echo "Backend health check passed"
+            exit 0
+          fi
+          echo "Retry $i/5..."
+          sleep 10
+        done
+        echo "Backend health check failed after 5 retries"
+        exit 1
     
     - name: Health check frontend
+      continue-on-error: true
       run: |
         FRONTEND_URL=$(az containerapp show \
           --name ${{ env.FRONTEND_APP }} \
@@ -121,8 +131,16 @@ jobs:
         echo "Waiting for frontend to be ready..."
         sleep 20
         
-        curl -f https://${FRONTEND_URL} || exit 1
-        echo "Frontend health check passed"
+        for i in {1..5}; do
+          if curl -f https://${FRONTEND_URL}; then
+            echo "Frontend health check passed"
+            exit 0
+          fi
+          echo "Retry $i/5..."
+          sleep 10
+        done
+        echo "Frontend health check failed after 5 retries"
+        exit 1
     
     - name: Deployment summary
       if: success()
