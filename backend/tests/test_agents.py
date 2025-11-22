@@ -13,192 +13,129 @@ class TestDraftAgent:
     """Test suite for DraftAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_returns_string(self):
+    async def test_execute_returns_string(self, mock_openai_client):
         """Draft agent should return draft content as string"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Draft about AI ethics"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = DraftAgent(model="gpt-4o-mini")
-            result = await agent.execute("AI ethics")
-            
-            assert isinstance(result, str)
-            assert len(result) > 0
+        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = "Draft about AI ethics"
+        
+        agent = DraftAgent(model="gpt-4o-mini")
+        result = await agent.execute("AI ethics")
+        
+        assert isinstance(result, str)
+        assert len(result) > 0
     
     @pytest.mark.asyncio
-    async def test_execute_with_empty_topic(self):
+    async def test_execute_with_empty_topic(self, mock_openai_client):
         """Draft agent should handle empty topic gracefully"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Please provide a topic"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = DraftAgent(model="gpt-4o-mini")
-            result = await agent.execute("")
-            assert isinstance(result, str)
+        agent = DraftAgent(model="gpt-4o-mini")
+        result = await agent.execute("")
+        assert isinstance(result, str)
 
 
 class TestReflectionAgent:
     """Test suite for ReflectionAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_with_draft(self):
+    async def test_execute_with_draft(self, mock_openai_client):
         """Reflection agent should critique draft content"""
         draft = "AI ethics is important for responsible development."
         
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Critique: Needs more depth"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = ReflectionAgent(model="gpt-4o-mini")
-            result = await agent.execute(draft)
-            
-            assert isinstance(result, str)
-            assert len(result) > 0
+        agent = ReflectionAgent(model="gpt-4o-mini")
+        result = await agent.execute(draft)
+        
+        assert isinstance(result, str)
+        assert len(result) > 0
     
     @pytest.mark.asyncio
-    async def test_execute_requires_draft(self):
+    async def test_execute_requires_draft(self, mock_openai_client):
         """Reflection agent should require draft parameter"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Critique"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = ReflectionAgent(model="gpt-4o-mini")
-            result = await agent.execute("some draft")
-            assert isinstance(result, str)
+        agent = ReflectionAgent(model="gpt-4o-mini")
+        result = await agent.execute("some draft")
+        assert isinstance(result, str)
 
 
 class TestRevisionAgent:
     """Test suite for RevisionAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_with_draft_and_reflection(self):
+    async def test_execute_with_draft_and_reflection(self, mock_openai_client):
         """Revision agent should revise based on draft and critique"""
         draft = "Original draft"
         reflection = "Needs improvement"
         
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Improved draft"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = RevisionAgent(model="gpt-4o-mini")
-            result = await agent.execute("topic", draft=draft, reflection=reflection)
-            
-            assert isinstance(result, str)
-            assert len(result) > 0
+        agent = RevisionAgent(model="gpt-4o-mini")
+        result = await agent.execute("topic", draft=draft, reflection=reflection)
+        
+        assert isinstance(result, str)
+        assert len(result) > 0
 
 
 class TestResearchAgent:
     """Test suite for ResearchAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_returns_research_results(self):
+    async def test_execute_returns_research_results(self, mock_openai_client):
         """Research agent should return research findings"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Research findings on quantum computing"))]
-            # Mock accepts any arguments including max_turns
-            mock_client.chat.completions.create = Mock(return_value=mock_response)
-            mock_openai.return_value = mock_client
-            
-            agent = ResearchAgent(model="gpt-4o-mini")
-            result = await agent.execute("Quantum computing applications")
-            
-            assert isinstance(result, str)
-            assert len(result) > 0
+        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = "Research findings on quantum computing"
+        
+        agent = ResearchAgent(model="gpt-4o-mini")
+        result = await agent.execute("Quantum computing applications")
+        
+        assert isinstance(result, str)
+        assert len(result) > 0
 
 
 class TestWriterAgent:
     """Test suite for WriterAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_with_context(self):
+    async def test_execute_with_context(self, mock_openai_client):
         """Writer agent should generate content from context"""
         context = "Research shows quantum computing is advancing rapidly"
         
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="Article about quantum computing"))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = WriterAgent(model="gpt-4o-mini")
-            result = await agent.execute("Write article", context=context)
-            
-            assert isinstance(result, str)
+        agent = WriterAgent(model="gpt-4o-mini")
+        result = await agent.execute("Write article", context=context)
+        
+        assert isinstance(result, str)
 
 
 class TestEditorAgent:
     """Test suite for EditorAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_edits_content(self):
+    async def test_execute_edits_content(self, mock_openai_client):
         """Editor agent should refine content"""
         draft = "This is a rough draft with some errors."
         
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content="This is a polished draft."))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = EditorAgent(model="gpt-4o-mini")
-            result = await agent.execute("Edit this", draft=draft)
-            
-            assert isinstance(result, str)
+        agent = EditorAgent(model="gpt-4o-mini")
+        result = await agent.execute("Edit this", draft=draft)
+        
+        assert isinstance(result, str)
 
 
 class TestPlannerAgent:
     """Test suite for PlannerAgent"""
     
     @pytest.mark.asyncio
-    async def test_execute_returns_plan_list(self):
+    async def test_execute_returns_plan_list(self, mock_openai_client):
         """Planner agent should return list of steps"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content='["Step 1", "Step 2", "Step 3"]'))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = PlannerAgent(model="gpt-4o-mini")
-            result = await agent.execute("Create research plan")
-            
-            assert isinstance(result, list)
-            assert len(result) > 0
+        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = '["Step 1", "Step 2", "Step 3"]'
+        
+        agent = PlannerAgent(model="gpt-4o-mini")
+        result = await agent.execute("Create research plan")
+        
+        assert isinstance(result, list)
+        assert len(result) > 0
     
     @pytest.mark.asyncio
-    async def test_execute_handles_max_steps(self):
+    async def test_execute_handles_max_steps(self, mock_openai_client):
         """Planner agent should respect max_steps parameter"""
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
-            mock_response = Mock()
-            mock_response.choices = [Mock(message=Mock(content='["Step 1", "Step 2"]'))]
-            mock_client.chat.completions.create.return_value = mock_response
-            mock_openai.return_value = mock_client
-            
-            agent = PlannerAgent(model="gpt-4o-mini")
-            result = await agent.execute("Plan", max_steps=2)
-            
-            assert isinstance(result, list)
-            assert len(result) <= 2
+        mock_openai_client.chat.completions.create.return_value.choices[0].message.content = '["Step 1", "Step 2"]'
+        
+        agent = PlannerAgent(model="gpt-4o-mini")
+        result = await agent.execute("Plan", max_steps=2)
+        
+        assert isinstance(result, list)
+        assert len(result) <= 2
 
 
 class TestAgentTemperatures:
