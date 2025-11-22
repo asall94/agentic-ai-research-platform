@@ -19,17 +19,16 @@ mock_openai_module.__spec__ = MagicMock()
 mock_openai_module.__spec__.name = 'openai'
 mock_client_instance = MagicMock()
 
-# Create a callable mock for chat.completions.create that returns different responses
-def mock_create(*args, **kwargs):
-    mock_response = MagicMock()
-    mock_message = MagicMock()
-    # Default JSON response for agent selection
-    mock_message.content = '{"agent": "research_agent", "task": "Execute task"}'
-    mock_choice = MagicMock()
-    mock_choice.message = mock_message
-    mock_response.choices = [mock_choice]
-    return mock_response
+# Create mock response with default JSON content
+mock_response = MagicMock()
+mock_message = MagicMock()
+mock_message.content = '{"agent": "research_agent", "task": "Execute task"}'
+mock_choice = MagicMock()
+mock_choice.message = mock_message
+mock_response.choices = [mock_choice]
 
+# Make create a MagicMock so tests can modify return_value
+mock_create = MagicMock(return_value=mock_response)
 mock_client_instance.chat.completions.create = mock_create
 mock_openai_module.OpenAI.return_value = mock_client_instance
 sys.modules['openai'] = mock_openai_module
