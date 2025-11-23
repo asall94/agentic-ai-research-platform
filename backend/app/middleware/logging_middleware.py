@@ -4,6 +4,7 @@ import uuid
 import time
 import logging
 from app.core.logging_config import StructuredLogger
+from app.core.app_insights import track_request, track_error
 
 logger = StructuredLogger(__name__)
 
@@ -44,6 +45,13 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 duration_seconds=round(duration, 3)
             )
             
+            # Track in Application Insights
+            track_request(
+                endpoint=request.url.path,
+                duration_ms=duration * 1000,
+                status=response.status_code
+            )
+            
             # Add correlation ID to response headers
             response.headers["X-Correlation-ID"] = correlation_id
             
@@ -58,4 +66,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 duration_seconds=round(duration, 3),
                 exc_info=True
             )
+            
+            # Track error in Application Insights
+            track_error(
+                error_type=type(e).__name__,
+                endpoint=request.url.path
+            )
+            
             raise

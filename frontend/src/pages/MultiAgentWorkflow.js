@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { workflowService } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { streamWorkflow } from '../services/streamingApi';
 import { LoadingSpinner, StatusBadge } from '../components/WorkflowCard';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
@@ -10,24 +10,65 @@ const MultiAgentWorkflow = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
+  const [progressMessage, setProgressMessage] = useState('');
+  const cleanupRef = useRef(null);
+  
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, []);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResult(null);
+    setResult({ plan: [], history: [], final_report: '' });
+    setCurrentStep('planning');
+    setProgressMessage('');
     
-    try {
-      const data = await workflowService.executeMultiAgentWorkflow({
-        topic,
-        max_steps: maxSteps
-      });
-      setResult(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    cleanupRef.current = streamWorkflow(
+      'multi-agent',
+      { topic, max_steps: maxSteps },
+      {
+        onProgress: (data) => {
+          setCurrentStep(data.step);
+          setProgressMessage(data.message);
+        },
+        onStepComplete: (data) => {
+          if (data.step === 'plan') {
+            setResult(prev => ({ ...prev, plan: data.data }));
+          } else if (data.step.startsWith('step_')) {
+            setResult(prev => ({
+              ...prev,
+              history: [...prev.history, data.data]
+            }));
+          } else if (data.step === 'final') {
+            setResult(prev => ({
+              ...prev,
+              plan: data.data.plan,
+              history: data.data.history,
+              final_report: data.data.final_report
+            }));
+          }
+          setProgressMessage('');
+        },
+        onComplete: () => {
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('');
+        },
+        onError: (errorMsg) => {
+          setError(errorMsg);
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('');
+        }
+      }
+    );
   };
   
   const downloadResult = (content, filename) => {
@@ -94,41 +135,32 @@ const MultiAgentWorkflow = () => {
         </form>
       </div>
       
-      {loading && (
-        <div className="card text-center py-12">
-          <LoadingSpinner size="lg" />
-          <p className="text-gray-600 mt-4">Coordinating specialized agents...</p>
-          <p className="text-sm text-gray-500 mt-2">This may take 60-90 seconds</p>
-        </div>
-      )}
-      
       {error && (
         <div className="card bg-red-50 border-red-200">
           <p className="text-red-700">Error: {error}</p>
         </div>
       )}
       
+      {progressMessage && (
+        <div className="card bg-blue-50 border-blue-200 mb-6">
+          <div className="flex items-center space-x-3">
+            <LoadingSpinner size="sm" />
+            <p className="text-blue-700 font-medium">{progressMessage}</p>
+          </div>
+        </div>
+      )}
+      
       {result && (
         <div className="space-y-6">
-          <div className="card bg-green-50 border-green-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <StatusBadge status={result.status} />
-                <p className="text-sm text-gray-600 mt-2">
-                  Execution time: {result.execution_time?.toFixed(2)}s
-                </p>
-                {result.steps_executed && (
-                  <p className="text-sm text-gray-600">
-                    Steps executed: {result.steps_executed}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          
           {result.plan && result.plan.length > 0 && (
             <div className="card bg-yellow-50">
               <h2 className="text-xl font-bold text-gray-800 mb-4">📋 Execution Plan</h2>
+              {currentStep === 'planning' && progressMessage && (
+                <div className="flex items-center space-x-3 p-4 bg-yellow-100 rounded-lg mb-4">
+                  <LoadingSpinner size="sm" />
+                  <p className="text-yellow-700">{progressMessage}</p>
+                </div>
+              )}
               <ol className="list-decimal list-inside space-y-2">
                 {result.plan.map((step, index) => (
                   <li key={index} className="text-gray-700">
@@ -142,30 +174,30 @@ const MultiAgentWorkflow = () => {
           {result.history && result.history.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-gray-800">🔄 Agent Execution History</h2>
-              {result.history.map((step, index) => (
+              {result.history.map((item, index) => (
                 <div key={index} className="card bg-gray-50">
                   <div className="flex items-center space-x-2 mb-3">
                     <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-semibold rounded">
-                      Step {step.step}
+                      Step {index + 1}
                     </span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
-                      {step.agent}
+                      {item.agent}
                     </span>
                   </div>
                   <div className="prose max-w-none text-sm">
-                    <ReactMarkdown>{step.output}</ReactMarkdown>
+                    <ReactMarkdown>{item.output}</ReactMarkdown>
                   </div>
                 </div>
               ))}
             </div>
           )}
           
-          {result.final_output && (
+          {result.final_report && (
             <div className="card bg-purple-50">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">✨ Final Output</h2>
+                <h2 className="text-xl font-bold text-gray-800">📄 Final Output</h2>
                 <button
-                  onClick={() => downloadResult(result.final_output, 'final_output.txt')}
+                  onClick={() => downloadResult(result.final_report, 'final_output.txt')}
                   className="text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                 >
                   <ArrowDownTrayIcon className="h-5 w-5" />
@@ -173,7 +205,7 @@ const MultiAgentWorkflow = () => {
                 </button>
               </div>
               <div className="prose max-w-none">
-                <ReactMarkdown>{result.final_output}</ReactMarkdown>
+                <ReactMarkdown>{result.final_report}</ReactMarkdown>
               </div>
             </div>
           )}

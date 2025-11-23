@@ -34,3 +34,15 @@ output "health_check_url" {
   description = "Backend health check endpoint"
   value       = "https://${azurerm_container_app.backend.ingress[0].fqdn}/api/v1/health"
 }
+
+output "application_insights_connection_string" {
+  description = "Application Insights connection string"
+  value       = azurerm_application_insights.main.connection_string
+  sensitive   = true
+}
+
+output "application_insights_instrumentation_key" {
+  description = "Application Insights instrumentation key"
+  value       = azurerm_application_insights.main.instrumentation_key
+  sensitive   = true
+}

@@ -9,6 +9,7 @@ from app.api.routes import workflows, health, cache, metrics
 from app.core.config import settings
 from app.core.startup_checks import check_requirements
 from app.core.logging_config import setup_json_logging, StructuredLogger
+from app.core.app_insights import setup_app_insights
 from app.middleware import RateLimiter, LoggingMiddleware
 
 # Load environment variables
@@ -17,6 +18,12 @@ load_dotenv()
 # Configure JSON logging
 setup_json_logging(settings.LOG_LEVEL)
 logger = StructuredLogger(__name__)
+
+# Configure Application Insights
+if setup_app_insights():
+    logger.info("Application Insights telemetry enabled")
+else:
+    logger.info("Application Insights telemetry disabled")
 
 # Run startup checks
 if not check_requirements():

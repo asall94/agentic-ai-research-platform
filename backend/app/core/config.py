@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW_SECONDS: int = 900
     
+    # Application Insights
+    APPLICATIONINSIGHTS_CONNECTION_STRING: str = ""
+    APPINSIGHTS_ENABLED: bool = True
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

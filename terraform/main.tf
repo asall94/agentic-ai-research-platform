@@ -21,6 +21,17 @@ resource "azurerm_log_analytics_workspace" "main" {
   tags = azurerm_resource_group.main.tags
 }
 
+# Application Insights
+resource "azurerm_application_insights" "main" {
+  name                = "appi-${var.project_name}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+
+  tags = azurerm_resource_group.main.tags
+}
+
 # Container Apps Environment
 resource "azurerm_container_app_environment" "main" {
   name                       = "cae-${var.project_name}"
@@ -110,6 +121,16 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "PORT"
         value = "8000"
+      }
+
+      env {
+        name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.main.connection_string
+      }
+
+      env {
+        name  = "APPINSIGHTS_ENABLED"
+        value = "True"
       }
     }
 

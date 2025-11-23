@@ -13,6 +13,9 @@ from app.workflows.multi_agent import MultiAgentWorkflow
 from app.services.cache_service import cache_service
 from app.services.metrics_service import metrics_service
 from app.core.logging_config import StructuredLogger
+from app.core.app_insights import track_workflow
+from app.api.routes.streaming import stream_workflow_progress
+from fastapi.responses import StreamingResponse
 from datetime import datetime
 import time
 import uuid
@@ -40,6 +43,10 @@ async def execute_reflection_workflow(request: ReflectionWorkflowRequest):
         cached_result = cache_service.get_cached_result(request.topic, "reflection")
         if cached_result:
             execution_time = time.time() - start_time
+            
+            # Track cache hit in Application Insights
+            track_workflow("simple_reflection", execution_time, cache_hit=True)
+            
             return ReflectionWorkflowResponse(
                 workflow_id=workflow_id,
                 workflow_type="simple_reflection",
@@ -74,6 +81,9 @@ async def execute_reflection_workflow(request: ReflectionWorkflowRequest):
             steps_count=3,
             agents_used=["draft", "reflection", "revision"]
         )
+        
+        # Track in Application Insights
+        track_workflow("simple_reflection", execution_time, cache_hit=False)
         
         return ReflectionWorkflowResponse(
             workflow_id=workflow_id,
@@ -249,3 +259,68 @@ async def execute_multi_agent_workflow(request: MultiAgentWorkflowRequest):
             final_report="",
             error=str(e)
         )
+
+
+@router.get("/reflection/stream")
+async def stream_reflection_workflow(topic: str, draft_model: str = None, reflection_model: str = None, revision_model: str = None):
+    """Stream reflection workflow with real-time progress events"""
+    
+    workflow = SimpleReflectionWorkflow(
+        draft_model=draft_model,
+        reflection_model=reflection_model,
+        revision_model=revision_model
+    )
+    
+    return StreamingResponse(
+        stream_workflow_progress("simple_reflection", topic, workflow),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@router.get("/tool-research/stream")
+async def stream_tool_research_workflow(topic: str, tools: str = "arxiv,wikipedia,tavily", model: str = None, max_results: int = 3):
+    """Stream tool research workflow with real-time progress events"""
+    
+    tools_list = [t.strip() for t in tools.split(",")]
+    
+    workflow = ToolResearchWorkflow(
+        model=model,
+        tools=tools_list,
+        max_results=max_results
+    )
+    
+    return StreamingResponse(
+        stream_workflow_progress("tool_research", topic, workflow, tools=tools_list),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@router.get("/multi-agent/stream")
+async def stream_multi_agent_workflow(topic: str, max_steps: int = 4, model: str = None):
+    """Stream multi-agent workflow with real-time progress events"""
+    
+    workflow = MultiAgentWorkflow(
+        model=model,
+        max_steps=max_steps,
+        limit_steps=True
+    )
+    
+    return StreamingResponse(
+        stream_workflow_progress("multi_agent", topic, workflow, max_steps=max_steps),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )

@@ -33,6 +33,22 @@ mock_client_instance.chat.completions.create = mock_create
 mock_openai_module.OpenAI.return_value = mock_client_instance
 sys.modules['openai'] = mock_openai_module
 
+# Mock opencensus to avoid Application Insights dependency in tests
+mock_opencensus = MagicMock()
+sys.modules['opencensus'] = mock_opencensus
+sys.modules['opencensus.ext'] = MagicMock()
+sys.modules['opencensus.ext.azure'] = MagicMock()
+sys.modules['opencensus.ext.azure.log_exporter'] = MagicMock()
+sys.modules['opencensus.ext.azure.metrics_exporter'] = MagicMock()
+sys.modules['opencensus.ext.fastapi'] = MagicMock()
+sys.modules['opencensus.stats'] = MagicMock()
+sys.modules['opencensus.stats.aggregation'] = MagicMock()
+sys.modules['opencensus.stats.measure'] = MagicMock()
+sys.modules['opencensus.stats.stats'] = MagicMock()
+sys.modules['opencensus.stats.view'] = MagicMock()
+sys.modules['opencensus.tags'] = MagicMock()
+sys.modules['opencensus.tags.tag_map'] = MagicMock()
+
 
 @pytest.fixture
 def mock_openai_client():

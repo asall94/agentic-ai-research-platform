@@ -46,3 +46,5 @@ pytest-mock>=3.12.0
 
 # Monitoring & Observability
 python-json-logger>=2.0.7
+opencensus-ext-azure>=1.1.13
+opencensus-ext-fastapi>=0.1.1

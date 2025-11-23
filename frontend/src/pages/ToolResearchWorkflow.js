@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { workflowService } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { streamWorkflow } from '../services/streamingApi';
 import { LoadingSpinner, StatusBadge } from '../components/WorkflowCard';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
@@ -10,12 +10,23 @@ const ToolResearchWorkflow = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
+  const [progressMessage, setProgressMessage] = useState('');
+  const cleanupRef = useRef(null);
   
   const availableTools = [
     { id: 'arxiv', name: 'arXiv', description: 'Academic papers and research' },
     { id: 'wikipedia', name: 'Wikipedia', description: 'Encyclopedia knowledge' },
     { id: 'tavily', name: 'Tavily', description: 'Web search' }
   ];
+  
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, []);
   
   const handleToolToggle = (toolId) => {
     setSelectedTools(prev =>
@@ -34,19 +45,37 @@ const ToolResearchWorkflow = () => {
     
     setLoading(true);
     setError(null);
-    setResult(null);
+    setResult({});
+    setCurrentStep('research');
+    setProgressMessage('');
     
-    try {
-      const data = await workflowService.executeToolResearchWorkflow({
-        topic,
-        tools: selectedTools
-      });
-      setResult(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    cleanupRef.current = streamWorkflow(
+      'tool-research',
+      { topic, tools: selectedTools.join(',') },
+      {
+        onProgress: (data) => {
+          setCurrentStep(data.step);
+          setProgressMessage(data.message);
+        },
+        onStepComplete: (data) => {
+          if (data.step === 'research') {
+            setResult(data.data);
+          }
+          setProgressMessage('');
+        },
+        onComplete: () => {
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('');
+        },
+        onError: (errorMsg) => {
+          setError(errorMsg);
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('');
+        }
+      }
+    );
   };
   
   const downloadResult = (content, filename) => {
