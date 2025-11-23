@@ -384,12 +384,12 @@ Metrics stored in `backend/metrics.json` for historical analysis.
 
 ## Semantic Caching
 
-The platform includes intelligent semantic caching to reduce costs and latency:
-- Reduces API costs by 60-80% for similar queries
-- Improves response time from 45s to <500ms for cached results
-- Uses sentence embeddings for semantic similarity matching (threshold: 0.95)
-- 30-day TTL for cached results
-- See `SEMANTIC_CACHING.md` for details
+Intelligent caching with sentence embeddings reduces costs and latency:
+- 60-80% API cost reduction for similar queries
+- Response time: 45s → <500ms for cache hits
+- Cosine similarity matching (threshold: 0.95)
+- 30-day TTL with manual invalidation endpoint
+- See `docs/adr/001-semantic-caching.md` for decision rationale
 
 ## Configuration
 
@@ -470,18 +470,14 @@ pytest tests/ --cov=app --cov-report=html
 
 ## CI/CD Pipeline
 
-**Automated workflows via GitHub Actions:**
+**Automated deployment via GitHub Actions** (`.github/workflows/azure-deploy.yml`):
 
-**Continuous Integration (on push/PR):**
-- Backend: Run pytest with coverage, upload to Codecov
-- Frontend: Build production bundle, validate
-- Docker: Test image builds without pushing
-
-**Continuous Deployment (on main push):**
-- Build and push Docker images to Azure Container Registry
-- Deploy to Azure Container Apps via Terraform
-- Health checks post-deployment
-- Rollback on failure
+**On push to main:**
+1. Run pytest with coverage (upload to Codecov)
+2. Build Docker images with BuildKit caching
+3. Push to Azure Container Registry
+4. Deploy to Azure Container Apps
+5. Execute health checks (rollback on failure)
 
 **Required GitHub Secrets:**
 - `OPENAI_API_KEY` - OpenAI API key for agent execution
@@ -493,12 +489,7 @@ Push to `main` branch triggers automatic deployment to Azure.
 
 ## Cloud Deployment
 
-**Azure Container Apps features:**
-- Auto-scaling (0-2 replicas based on load)
-- Managed HTTPS certificates
-- Application Insights integration
-- Zero-downtime deployments
-- Free tier: 180,000 vCPU-seconds/month
+**Azure Container Apps** (auto-scaling 0-2 replicas, managed HTTPS, Application Insights, zero-downtime deployments)
 
 **Getting started:**
 1. Create Azure account: https://azure.microsoft.com/free
@@ -537,9 +528,9 @@ cd terraform
 - Frontend Container App (React)
 - All environment variables and secrets
 
-**Cost:** Free tier eligible (180,000 vCPU-seconds/month)
+**Cost:** $7.80/month production (free tier: 180,000 vCPU-seconds/month)
 
-**Documentation:** See `terraform/README.md` for deployment details.
+**Documentation:** `terraform/README.md` | **Architecture Decisions:** `docs/adr/`
 
 ## Author & Copyright
 
