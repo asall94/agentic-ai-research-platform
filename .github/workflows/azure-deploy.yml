@@ -22,10 +22,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 3.11
+    - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
     
     - name: Install dependencies
       working-directory: ./backend
@@ -63,17 +63,14 @@ jobs:
         echo "=== Disk space before cleanup ==="
         df -h /
         
-        echo "=== Removing unnecessary files ==="
-        # Remove large pre-installed packages not needed
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /opt/ghc
+        echo "=== Fast cleanup (parallel removal) ==="
+        # Remove only the 2 biggest space consumers in parallel
+        sudo rm -rf /usr/share/dotnet &            # .NET SDK (~20GB)
+        sudo rm -rf /usr/local/lib/android &       # Android SDK (~30GB)
+        wait
         
-        # Clean Docker (dangling images only, keep cache)
+        # Quick Docker cleanup
         sudo docker image prune -af
-        
-        # Clean package managers
-        sudo apt-get clean
         
         echo "=== Disk space after cleanup ==="
         df -h /
