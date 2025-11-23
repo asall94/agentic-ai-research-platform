@@ -65,9 +65,13 @@ jobs:
         android: true
         dotnet: true
         haskell: true
-        large-packages: true
+        large-packages: false
         docker-images: false
         swap-storage: false
+    
+    - name: Install Azure CLI
+      run: |
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
     
     - name: Azure Login
       uses: azure/login@v2
