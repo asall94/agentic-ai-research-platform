@@ -44,16 +44,30 @@ docker-compose down
 docker-compose up --build -d
 ```
 
-## Environment Configuration
+**Environment Configuration**
 
 Create `.env` in project root:
 ```env
+# Required
 OPENAI_API_KEY=sk-...
+
+# Optional (1000 free searches/month)
 TAVILY_API_KEY=tvly-...
+
+# Cache
 CACHE_ENABLED=True
+REDIS_URL=redis://redis:6379
+
+# Logging
 LOG_LEVEL=INFO
+
+# Rate Limiting
 RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_WINDOW_SECONDS=900
+
+# Application Insights (optional, for local monitoring)
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
+APPINSIGHTS_ENABLED=False
 ```
 
 ## Production Deployment

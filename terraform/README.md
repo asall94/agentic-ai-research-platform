@@ -2,7 +2,7 @@
 
 ## Overview
 
-Automates provisioning of Azure Container Apps infrastructure for production deployment. Creates Resource Group, Container Registry, Container App Environment with monitoring, and deploys backend/frontend containers.
+Automates provisioning of Azure Container Apps infrastructure for production deployment. Creates Resource Group, Container Registry, Application Insights, Container App Environment with monitoring, and deploys backend/frontend containers.
 
 ## Prerequisites
 
@@ -54,7 +54,7 @@ notepad terraform\terraform.tfvars
 # 3. Initialize
 .\terraform\deploy.ps1 -Action init
 
-# 4. Preview changes (6 resources)
+# 4. Preview changes (7 resources)
 .\terraform\deploy.ps1 -Action plan
 
 # 5. Deploy to Azure
@@ -91,7 +91,7 @@ terraform output
 
 **Actions:**
 - `init` - Download Azure provider
-- `plan` - Preview changes (6 resources)
+- `plan` - Preview changes (7 resources)
 - `apply` - Create/update infrastructure
 - `destroy` - Delete all resources
 - `output` - Show deployment URLs and ACR credentials
@@ -124,7 +124,7 @@ $env:TF_VAR_redis_url = "redis://..."
 
 ## Resources Created
 
-Terraform creates 6 Azure resources:
+Terraform creates 7 Azure resources:
 
 **1. Resource Group** (`rg-agentic-ai-research`)
 - Location: West Europe
@@ -133,25 +133,33 @@ Terraform creates 6 Azure resources:
 **2. Log Analytics Workspace**
 - 30-day retention
 - Powers Application Insights monitoring
+- 5GB/month free tier
 
-**3. Container App Environment**
+**3. Application Insights** (`appi-agentic-ai-research-platform`)
+- Production telemetry and monitoring
+- Custom metrics: request duration, error count, workflow duration, cache hits
+- Integrated with Log Analytics workspace
+- Free tier: 5GB/month included
+
+**4. Container App Environment**
 - Shared runtime for both apps
 - Integrated with Log Analytics
 
-**4. Azure Container Registry** (`acragenticai`)
+**5. Azure Container Registry** (`acragenticai`)
 - Basic SKU (free tier eligible)
 - Stores backend/frontend Docker images
 - Admin credentials enabled
 
-**5. Backend Container App**
+**6. Backend Container App**
 - FastAPI application on port 8000
 - 0.25 CPU, 0.5Gi memory per replica
 - Auto-scaling: 0-2 replicas
-- 10 environment variables (API keys, rate limits)
+- 12 environment variables (API keys, rate limits, Application Insights)
 - Health probe: `/api/v1/health`
 - External ingress with HTTPS
+- Environment variables include: APPLICATIONINSIGHTS_CONNECTION_STRING, APPINSIGHTS_ENABLED
 
-**6. Frontend Container App**
+**7. Frontend Container App**
 - React application on port 80
 - 0.25 CPU, 0.5Gi memory per replica
 - Auto-scaling: 0-2 replicas
@@ -163,13 +171,15 @@ Terraform creates 6 Azure resources:
 After `terraform apply`:
 
 ```
-backend_url                 = "https://backend.salmonisland-12345.westeurope.azurecontainerapps.io"
-frontend_url                = "https://frontend.salmonisland-12345.westeurope.azurecontainerapps.io"
-health_check_url            = "https://backend.../api/v1/health"
-resource_group_name         = "rg-agentic-ai-research"
-container_registry_url      = "acragenticai.azurecr.io"
-container_registry_username = "acragenticai" (sensitive)
-container_registry_password = "..." (sensitive)
+backend_url                          = "https://backend.salmonisland-12345.westeurope.azurecontainerapps.io"
+frontend_url                         = "https://frontend.salmonisland-12345.westeurope.azurecontainerapps.io"
+health_check_url                     = "https://backend.../api/v1/health"
+resource_group_name                  = "rg-agentic-ai-research"
+container_registry_url               = "acragenticai.azurecr.io"
+container_registry_username          = "acragenticai" (sensitive)
+container_registry_password          = "..." (sensitive)
+application_insights_connection_string = "InstrumentationKey=...;IngestionEndpoint=..." (sensitive)
+application_insights_instrumentation_key = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" (sensitive)
 ```
 
 **Use ACR credentials for CI/CD:**
@@ -189,7 +199,7 @@ terraform output -raw container_registry_password
 az login
 cd terraform
 terraform init
-terraform plan  # Review 6 resources to create
+terraform plan  # Review 7 resources to create
 terraform apply
 # Confirm with 'yes'
 ```
@@ -319,6 +329,7 @@ az storage container create --name tfstate --account-name tfstateagentic
 **Additional costs:**
 - Container Registry (Basic): 0€/month (5GB storage included)
 - Log Analytics: 0€/month (5GB/month free tier)
+- Application Insights: 0€/month (included with Log Analytics free tier, 5GB/month)
 - Upstash Redis: 0€/month (10,000 commands/day free)
 
 **Upgrades available:**

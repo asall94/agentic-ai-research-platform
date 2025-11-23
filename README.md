@@ -178,11 +178,14 @@ graph LR
 **Production-Grade Stack**
 - Backend: FastAPI with async support, OpenAI integration, structured logging
 - Frontend: React with TailwindCSS, real-time monitoring, responsive design
-- Cloud: Azure Container Apps with auto-scaling, monitoring, and managed identities
+- Streaming: Server-Sent Events (SSE) for real-time workflow progress (ChatGPT-style UX)
+- Cloud: Azure Container Apps with auto-scaling, Application Insights monitoring
 - Integration: arXiv API, Tavily search, Wikipedia, OpenAI GPT-4/GPT-4o-mini
 - Cache: Redis (Upstash) with semantic similarity matching (60-80% cost reduction)
+- Cache-Aware Streaming: Instant results (<1s) on cache hit, progressive updates on miss (60-90s)
 - Rate Limiting: 100 requests/15min per IP (configurable)
 - DevOps: Docker multi-stage builds, GitHub Actions CI/CD, Terraform IaC (Azure)
+- Monitoring: Azure Application Insights with custom metrics (requests, errors, workflows, cache hits)
 - Export: HTML, Markdown, JSON formats
 
 ## Quick Start
@@ -257,12 +260,23 @@ pip install -r requirements.txt
 **Environment Configuration**
 Create `backend/.env`:
 ```env
+# Required
 OPENAI_API_KEY=sk-...
+
+# Optional (1000 free searches/month)
 TAVILY_API_KEY=tvly-...
-REDIS_URL=redis://localhost:6379
+
+# Cache (Upstash Redis free tier)
+REDIS_URL=redis://default:password@host.upstash.io:6379
 CACHE_ENABLED=True
+
+# Rate Limiting
 RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_WINDOW_SECONDS=900
+
+# Application Insights (Azure)
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
+APPINSIGHTS_ENABLED=True
 ```
 
 **Redis Setup** (Windows)
@@ -310,25 +324,42 @@ See `DOCKER.md` for advanced Docker usage.
 
 ## API Usage
 
-**Reflection Workflow**
+**Reflection Workflow (Standard)**
 ```powershell
 curl -X POST http://localhost:8000/api/v1/workflows/reflection `
   -H "Content-Type: application/json" `
   -d '{"topic": "AI Ethics in Healthcare"}'
 ```
 
-**Research Workflow**
+**Reflection Workflow (Streaming)**
+```powershell
+curl -N http://localhost:8000/api/v1/workflows/reflection/stream?topic=AI%20Ethics
+# Returns SSE stream with progressive updates
+# Event types: start, cache_hit, progress, step_complete, complete, error
+```
+
+**Research Workflow (Standard)**
 ```powershell
 curl -X POST http://localhost:8000/api/v1/workflows/tool-research `
   -H "Content-Type: application/json" `
   -d '{"topic": "Quantum Computing Applications", "tools": ["arxiv", "wikipedia"]}'
 ```
 
-**Multi-Agent Workflow**
+**Research Workflow (Streaming)**
+```powershell
+curl -N "http://localhost:8000/api/v1/workflows/tool-research/stream?topic=Quantum%20Computing&tools=arxiv,wikipedia"
+```
+
+**Multi-Agent Workflow (Standard)**
 ```powershell
 curl -X POST http://localhost:8000/api/v1/workflows/multi-agent `
   -H "Content-Type: application/json" `
   -d '{"topic": "Climate Change Modeling", "max_steps": 4}'
+```
+
+**Multi-Agent Workflow (Streaming)**
+```powershell
+curl -N "http://localhost:8000/api/v1/workflows/multi-agent/stream?topic=Climate%20Change&max_steps=4"
 ```
 
 **API Documentation**
@@ -366,7 +397,30 @@ RATE_LIMIT_REQUESTS=50      # Stricter for production
 RATE_LIMIT_WINDOW_SECONDS=900  # 15 minutes
 ```
 
-## Performance Metrics
+## Real-Time Streaming
+
+Server-Sent Events (SSE) provide ChatGPT-style progressive rendering:
+- Progressive UI updates as each agent completes its step
+- Cache-aware optimization: <1s instant results on cache hit, 60-90s streaming on miss
+- Event types: `start`, `cache_hit`, `progress`, `step_complete`, `complete`, `error`
+- Auto-reconnection on network interruption
+- Works with Azure Container Apps auto-scaling
+- See `docs/adr/006-server-sent-events-streaming.md` for decision rationale
+
+**Frontend Integration:**
+```javascript
+import { streamWorkflow } from './services/streamingApi';
+
+streamWorkflow('reflection', { topic: 'AI Ethics' }, {
+  onProgress: (message) => console.log(message),
+  onStepComplete: (step, data) => updateUI(step, data),
+  onCacheHit: (data) => showInstantResult(data),
+  onComplete: () => finalize(),
+  onError: (error) => handleError(error)
+});
+```
+
+**Performance Metrics**
 
 **Track workflow performance:**
 ```powershell
@@ -382,14 +436,43 @@ curl http://localhost:8000/api/v1/metrics/summary
 
 Metrics stored in `backend/metrics.json` for historical analysis.
 
+## Application Insights Monitoring
+
+Azure Application Insights provides production telemetry:
+- Request duration distribution (cache hit <1s, cache miss 60-90s)
+- Error tracking by type with stack traces
+- Custom workflow metrics (execution time, cache hit rate)
+- Log aggregation with correlation IDs
+- Live metrics dashboard in Azure Portal
+- Free tier: 5GB/month included with Log Analytics
+
+**Custom Metrics Tracked:**
+- `request_duration_ms`: HTTP request latency with distribution buckets [50, 100, 200, 500, 1000, 2000, 5000]ms
+- `error_count`: Error count by type and endpoint
+- `workflow_duration_seconds`: Workflow execution time with distribution [1, 5, 10, 30, 60, 120, 300]s
+- `cache_hit`: Cache hit/miss indicator (1/0)
+
+**Configuration:**
+```env
+# backend/.env
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
+APPINSIGHTS_ENABLED=True
+```
+
+**Access logs in Azure Portal:**
+1. Navigate to Resource Group → Application Insights resource
+2. View Logs, Metrics, Live Metrics, Failures
+3. Query with KQL: `requests | where duration > 5000 | summarize count() by resultCode`
+
 ## Semantic Caching
 
 Intelligent caching with sentence embeddings reduces costs and latency:
 - 60-80% API cost reduction for similar queries
-- Response time: 45s → <500ms for cache hits
+- Response time: 60-90s → <1s for cache hits
 - Cosine similarity matching (threshold: 0.95)
 - 30-day TTL with manual invalidation endpoint
-- See `docs/adr/001-semantic-caching.md` for decision rationale
+- Cache-aware streaming: Instant delivery on hit, progressive updates on miss
+- See `docs/adr/001-semantic-caching.md` and `docs/adr/006-server-sent-events-streaming.md` for rationale
 
 ## Configuration
 
@@ -541,9 +624,11 @@ cd terraform
 - Multi-agent orchestration with LLM-driven task routing
 - Agentic AI workflows (reflection, tool integration, planning)
 - Production FastAPI deployment with async patterns
+- Server-Sent Events (SSE) for real-time streaming with cache-aware optimization
 - Semantic caching with sentence embeddings (60-80% cost reduction)
 - OpenAI GPT-4/GPT-4o-mini integration with function calling
 - Azure Container Apps deployment with Terraform IaC
+- Azure Application Insights monitoring with custom metrics and telemetry
 - GitHub Actions CI/CD with automated testing and deployment
 - Structured JSON logging for production monitoring
 - Rate limiting and middleware architecture

@@ -77,10 +77,11 @@ Implement semantic caching using Redis with sentence embeddings for similarity m
 
 **Production performance (30-day observation):**
 - Cache hit rate: 68% (target: 60-80%)
-- Average latency (cache hit): 420ms (target: <500ms)
-- Average latency (cache miss): 47s (baseline: 45-60s)
+- Average latency (cache hit): <1s instant delivery with SSE cache_hit event (baseline: 60-90s streaming)
+- Average latency (cache miss): 60-90s with progressive streaming updates
 - Cost savings: $0.034 per cached query × 68% hit rate = 72% reduction
 - Storage utilization: 4.8KB average per entry, 12MB total (1,000 entries)
+- Cache-aware streaming: Instant results on hit, real-time progress on miss (see ADR-006)
 
 ## References
 

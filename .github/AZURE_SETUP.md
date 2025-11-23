@@ -55,6 +55,14 @@ Add these secrets:
 | `TAVILY_API_KEY` | `tvly-...` | Tavily API key for tests |
 | `REDIS_URL` | `redis://...` | Upstash Redis URL for tests |
 
+### Optional Secrets
+
+| Secret Name | Value | Description |
+|-------------|-------|-------------|
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | `InstrumentationKey=...;IngestionEndpoint=...` | Azure Application Insights for monitoring (recommended for production) |
+
+**Note:** Application Insights connection string is automatically configured in Container Apps via Terraform. This secret is only needed if running tests with Application Insights locally.
+
 **How to add:**
 1. Click "New repository secret"
 2. Name: `AZURE_CREDENTIALS`
@@ -75,6 +83,8 @@ env:
 ```
 
 If you changed resource names in Terraform, update these values.
+
+**Note:** Application Insights is configured automatically via Terraform. The backend Container App receives `APPLICATIONINSIGHTS_CONNECTION_STRING` and `APPINSIGHTS_ENABLED=True` from Terraform outputs. No workflow changes needed.
 
 ## Step 4: Get Backend URL for Frontend Build
 
@@ -116,10 +126,10 @@ test (2-3 min)
 
 build-and-deploy (5-7 min)
   ├── Azure Login
-  ├── Build backend Docker image
+  ├── Build backend Docker image (includes Application Insights dependencies)
   ├── Build frontend Docker image
   ├── Push images to ACR
-  ├── Update backend Container App
+  ├── Update backend Container App (Application Insights auto-configured via Terraform)
   ├── Update frontend Container App
   ├── Health check backend
   ├── Health check frontend
@@ -150,6 +160,18 @@ curl https://YOUR-BACKEND-URL/api/v1/health
 
 # Frontend
 curl https://YOUR-FRONTEND-URL
+```
+
+**Verify Application Insights:**
+```powershell
+# Check backend container logs for Application Insights initialization
+az containerapp logs show `
+  --name backend `
+  --resource-group rg-agentic-ai-research `
+  --tail 50 | Select-String "Application Insights"
+
+# View in Azure Portal
+# Navigate to: Resource Group → appi-agentic-ai-research-platform → Live Metrics
 ```
 
 ## Workflow Triggers

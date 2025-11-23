@@ -16,6 +16,7 @@ Deploy on Azure Container Apps with Terraform infrastructure-as-code.
 **Architecture:**
 - Resource Group: `rg-agentic-ai-research` (West Europe)
 - Container Apps Environment: Shared logs (Log Analytics Workspace)
+- Application Insights: Production telemetry with custom metrics
 - Backend: FastAPI container (auto-scale 0-2 replicas)
 - Frontend: Nginx + React container (auto-scale 0-2 replicas)
 - Container Registry: Azure ACR (Basic SKU)
@@ -94,6 +95,7 @@ resource "azurerm_container_app" "backend" {
 - Container Apps: $0 (within free tier: 15,000 vCPU-seconds/month)
 - Container Registry: $5/month (Basic SKU: 10GB storage)
 - Log Analytics: $2.50/month (5GB ingestion)
+- Application Insights: $0 (included with Log Analytics free tier: 5GB/month)
 - **Total: $7.50/month** (vs $70+ for AKS, $55+ for App Service)
 
 ## Technical Implementation
@@ -101,9 +103,10 @@ resource "azurerm_container_app" "backend" {
 **Terraform resources:**
 - `azurerm_resource_group`: Container for all resources
 - `azurerm_log_analytics_workspace`: Centralized logging
+- `azurerm_application_insights`: Production monitoring with custom metrics
 - `azurerm_container_app_environment`: Shared runtime environment
 - `azurerm_container_registry`: Docker image storage
-- `azurerm_container_app` (backend): FastAPI app with secrets injection
+- `azurerm_container_app` (backend): FastAPI app with secrets injection + Application Insights
 - `azurerm_container_app` (frontend): React app with REACT_APP_API_URL build arg
 
 **Deployment flow (GitHub Actions):**
