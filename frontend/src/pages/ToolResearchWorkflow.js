@@ -73,6 +73,13 @@ const ToolResearchWorkflow = () => {
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
+        },
+        onCacheHit: (data) => {
+          setResult(data);
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('Cache hit - instant results!');
+          setTimeout(() => setProgressMessage(''), 3000);
         }
       }
     );
@@ -91,7 +98,7 @@ const ToolResearchWorkflow = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Tool-Enhanced Research</h1>
       <p className="text-gray-600 mb-8">
-        Search across arXiv, Wikipedia, and Tavily to synthesize comprehensive research reports.
+        Search across arXiv, Wikipedia, and Tavily to synthesize comprehensive research reports. Results stream in real-time.
       </p>
       
       <div className="card mb-8">

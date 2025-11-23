@@ -61,3 +61,6 @@ htmlcov/
 
 # AI instructions (keep local only)
 .github/copilot-instructions.md
+
+# Development test files
+test-sse-streaming.html

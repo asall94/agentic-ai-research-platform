@@ -25,6 +25,13 @@ export function streamWorkflow(workflowType, params, callbacks) {
           console.log('[SSE] Workflow started:', data);
           break;
           
+        case 'cache_hit':
+          console.log('[SSE] Cache hit - instant results');
+          if (callbacks.onCacheHit) {
+            callbacks.onCacheHit(data.data);
+          }
+          break;
+          
         case 'progress':
           if (callbacks.onProgress) {
             callbacks.onProgress(data);

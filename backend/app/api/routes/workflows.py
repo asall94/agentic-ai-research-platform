@@ -272,7 +272,7 @@ async def stream_reflection_workflow(topic: str, draft_model: str = None, reflec
     )
     
     return StreamingResponse(
-        stream_workflow_progress("simple_reflection", topic, workflow),
+        stream_workflow_progress("simple_reflection", topic, workflow, cache_service),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -295,7 +295,7 @@ async def stream_tool_research_workflow(topic: str, tools: str = "arxiv,wikipedi
     )
     
     return StreamingResponse(
-        stream_workflow_progress("tool_research", topic, workflow, tools=tools_list),
+        stream_workflow_progress("tool_research", topic, workflow, cache_service, tools=tools_list),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -316,7 +316,7 @@ async def stream_multi_agent_workflow(topic: str, max_steps: int = 4, model: str
     )
     
     return StreamingResponse(
-        stream_workflow_progress("multi_agent", topic, workflow, max_steps=max_steps),
+        stream_workflow_progress("multi_agent", topic, workflow, cache_service, max_steps=max_steps),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

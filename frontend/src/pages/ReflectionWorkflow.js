@@ -54,6 +54,18 @@ const ReflectionWorkflow = () => {
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
+        },
+        onCacheHit: (data) => {
+          // Cache hit - populate all fields immediately
+          setResult({
+            draft: data.draft,
+            reflection: data.reflection,
+            revised: data.revised
+          });
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('Cache hit - instant results!');
+          setTimeout(() => setProgressMessage(''), 3000);
         }
       }
     );
@@ -72,7 +84,7 @@ const ReflectionWorkflow = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Simple Reflection Workflow</h1>
       <p className="text-gray-600 mb-8">
-        This workflow generates a draft, reflects on it, and produces an improved revision.
+        This workflow generates a draft, reflects on it, and produces an improved revision. Results stream in real-time as each step completes.
       </p>
       
       <div className="card mb-8">

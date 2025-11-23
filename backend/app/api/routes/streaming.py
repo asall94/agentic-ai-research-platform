@@ -2,9 +2,9 @@ import asyncio
 import json
 from typing import AsyncGenerator
 
-async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func, **kwargs) -> AsyncGenerator[str, None]:
+async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func, cache_service, **kwargs) -> AsyncGenerator[str, None]:
     """
-    Stream workflow execution progress as SSE events.
+    Stream workflow execution progress as SSE events with cache awareness.
     
     Yields JSON events: {"type": "status", "data": {...}}
     """
@@ -18,16 +18,48 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
         
         await asyncio.sleep(0.1)  # Ensure client receives start
         
-        # Execute workflow with progress callbacks
+        # Check cache first
+        cached_result = cache_service.get_cached_result(topic, workflow_type.replace("-", "_"))
+        if cached_result:
+            # Cache hit - send full result immediately
+            yield json.dumps({
+                "type": "cache_hit",
+                "data": cached_result
+            }) + "\n\n"
+            
+            yield json.dumps({"type": "complete"}) + "\n\n"
+            return
+        
+        # Cache miss - stream workflow execution
+        result_data = {}
+        
         if workflow_type == "simple_reflection":
             async for event in stream_reflection_workflow(workflow_func, topic, **kwargs):
                 yield event
+                # Capture step data for caching
+                event_data = json.loads(event.strip())
+                if event_data.get("type") == "step_complete":
+                    result_data[event_data["step"]] = event_data["data"]
         elif workflow_type == "tool_research":
             async for event in stream_tool_research_workflow(workflow_func, topic, **kwargs):
                 yield event
+                event_data = json.loads(event.strip())
+                if event_data.get("type") == "step_complete":
+                    result_data = event_data["data"]
         elif workflow_type == "multi_agent":
             async for event in stream_multi_agent_workflow(workflow_func, topic, **kwargs):
                 yield event
+                event_data = json.loads(event.strip())
+                if event_data.get("type") == "step_complete":
+                    step = event_data["step"]
+                    if step == "plan":
+                        result_data["plan"] = event_data["data"]
+                    elif step == "final":
+                        result_data = event_data["data"]
+        
+        # Store in cache after streaming completes
+        if result_data:
+            cache_service.store_result(topic, workflow_type.replace("-", "_"), result_data)
         
         # Completion event
         yield json.dumps({"type": "complete"}) + "\n\n"

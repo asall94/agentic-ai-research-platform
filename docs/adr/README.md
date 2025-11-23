@@ -29,6 +29,7 @@ Each ADR follows this structure:
 | [003](003-azure-container-apps.md) | Azure Container Apps for Cloud Deployment | Accepted | 2025-11-23 |
 | [004](004-fastapi-backend.md) | FastAPI Backend Architecture | Accepted | 2025-11-23 |
 | [005](005-redis-cache-backend.md) | Redis for Semantic Caching Backend | Accepted | 2025-11-23 |
+| [006](006-server-sent-events-streaming.md) | Server-Sent Events for Real-Time Progress | Accepted | 2025-11-23 |
 
 ## Key Themes
 

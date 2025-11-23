@@ -66,6 +66,17 @@ const MultiAgentWorkflow = () => {
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
+        },
+        onCacheHit: (data) => {
+          setResult({
+            plan: data.plan || [],
+            history: data.history || [],
+            final_report: data.final_report || ''
+          });
+          setLoading(false);
+          setCurrentStep(null);
+          setProgressMessage('Cache hit - instant results!');
+          setTimeout(() => setProgressMessage(''), 3000);
         }
       }
     );
@@ -84,7 +95,7 @@ const MultiAgentWorkflow = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Multi-Agent Orchestration</h1>
       <p className="text-gray-600 mb-8">
-        Coordinate specialized agents (Planner, Research, Writer, Editor) to execute complex research workflows dynamically.
+        Coordinate specialized agents (Planner, Research, Writer, Editor) to execute complex research workflows dynamically. Watch agents work in real-time.
       </p>
       
       <div className="card mb-8">
@@ -121,7 +132,7 @@ const MultiAgentWorkflow = () => {
               <span>6 steps</span>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              More steps = deeper analysis but longer execution time
+              More steps = deeper analysis but longer execution time (first run ~60-90s, cached &lt;1s)
             </p>
           </div>
           
@@ -142,10 +153,10 @@ const MultiAgentWorkflow = () => {
       )}
       
       {progressMessage && (
-        <div className="card bg-blue-50 border-blue-200 mb-6">
+        <div className={`card mb-6 ${progressMessage.includes('Cache hit') ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
           <div className="flex items-center space-x-3">
-            <LoadingSpinner size="sm" />
-            <p className="text-blue-700 font-medium">{progressMessage}</p>
+            {!progressMessage.includes('Cache hit') && <LoadingSpinner size="sm" />}
+            <p className={`font-medium ${progressMessage.includes('Cache hit') ? 'text-green-700' : 'text-blue-700'}`}>{progressMessage}</p>
           </div>
         </div>
       )}
