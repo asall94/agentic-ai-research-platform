@@ -528,15 +528,14 @@ cd terraform
 - Frontend Container App (React)
 - All environment variables and secrets
 
-**Cost:** $7.80/month production (free tier: 180,000 vCPU-seconds/month)
+**Cost:** $7.50/month production (free tier: 180,000 vCPU-seconds/month)
 
 **Documentation:** `terraform/README.md` | **Architecture Decisions:** `docs/adr/`
 
 ## Author & Copyright
 
-**AI Engineer:** Abdoulaye SALL  
-**LinkedIn:** [linkedin.com/in/abdoulaye-sall](https://linkedin.com/in/abdoulaye-sall)  
-**Year:** 2025
+**Abdoulaye SALL** - Lead AI Engineer  
+[LinkedIn](https://linkedin.com/in/abdoulaye-sall/) 
 
 **Skills Demonstrated:**
 - Multi-agent orchestration with LLM-driven task routing

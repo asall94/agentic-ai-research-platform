@@ -58,7 +58,7 @@ Each ADR follows this structure:
 - Cache hit rate: 68% (target: 60-80%)
 - Cost per query: $0.0056 (70% reduction from $0.02 baseline)
 - Average workflow time: 47s uncached, 420ms cached
-- Deployment cost: $7.80/month
+- Deployment cost: $7.50/month
 - Uptime: 99.8%
 
 ## Decision Principles

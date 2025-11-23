@@ -132,7 +132,7 @@ az containerapp logs show --name ca-agentic-ai-backend --resource-group rg-agent
 - Uptime: 99.8% (1 brief outage during Azure region maintenance)
 - Cold start frequency: 12% of requests (scale-from-zero events)
 - Average cold start latency: 6.2s (acceptable for demo)
-- Monthly cost: $7.80 (within budget target)
+- Monthly cost: $7.50 (within budget target)
 - Auto-scaling events: 47 scale-ups, 51 scale-downs (effective cost optimization)
 
 **Health check success rate:** 99.9% (backend), 100% (frontend)
