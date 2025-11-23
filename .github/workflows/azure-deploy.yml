@@ -58,22 +58,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Free disk space before builds
-      run: |
-        echo "=== Disk space before cleanup ==="
-        df -h /
-        
-        echo "=== Fast cleanup (parallel removal) ==="
-        # Remove only the 2 biggest space consumers in parallel
-        sudo rm -rf /usr/share/dotnet &            # .NET SDK (~20GB)
-        sudo rm -rf /usr/local/lib/android &       # Android SDK (~30GB)
-        wait
-        
-        # Quick Docker cleanup
-        sudo docker image prune -af
-        
-        echo "=== Disk space after cleanup ==="
-        df -h /
+    - name: Free disk space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: false
+        swap-storage: false
     
     - name: Azure Login
       uses: azure/login@v2
