@@ -58,6 +58,47 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Monitor and clean disk space dynamically
+      run: |
+        echo "Initial disk space:"
+        df -h /
+        
+        # Function to check disk usage percentage
+        check_disk() {
+          df / | awk 'NR==2 {print $5}' | sed 's/%//'
+        }
+        
+        # Clean only if disk usage > 90%
+        USAGE=$(check_disk)
+        echo "Current disk usage: ${USAGE}%"
+        
+        if [ $USAGE -gt 90 ]; then
+          echo "Disk usage critical (${USAGE}%), cleaning unnecessary files..."
+          
+          # Remove only dangling/unused Docker images (keep build cache)
+          sudo docker image prune -af
+          
+          # Remove stopped containers
+          sudo docker container prune -f
+          
+          # Remove apt cache
+          sudo apt-get clean
+          
+          # Remove old logs
+          sudo journalctl --vacuum-time=1d
+          
+          # Remove temp files
+          sudo rm -rf /tmp/* 2>/dev/null || true
+          
+          echo "Disk space after cleanup:"
+          df -h /
+          
+          USAGE_AFTER=$(check_disk)
+          echo "Freed $((USAGE - USAGE_AFTER))% disk space"
+        else
+          echo "Disk space sufficient (${USAGE}%), skipping cleanup"
+        fi
+    
     - name: Azure Login
       uses: azure/login@v2
       with:
