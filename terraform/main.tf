@@ -132,6 +132,11 @@ resource "azurerm_container_app" "backend" {
         name  = "APPINSIGHTS_ENABLED"
         value = "True"
       }
+
+      env {
+        name  = "CORS_ORIGINS"
+        value = "https://${azurerm_container_app.frontend.ingress[0].fqdn},http://localhost:3000,http://localhost:3001"
+      }
     }
 
     min_replicas = 0
