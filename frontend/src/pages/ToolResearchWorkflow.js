@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { streamWorkflow } from '../services/streamingApi';
+import { historyService } from '../services/historyService';
 import { LoadingSpinner, StatusBadge } from '../components/WorkflowCard';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
@@ -46,8 +47,9 @@ const ToolResearchWorkflow = () => {
     setLoading(true);
     setError(null);
     setResult({});
-    setCurrentStep('research');
+    setCurrentStep(null);
     setProgressMessage('');
+    const startTime = Date.now();
     
     cleanupRef.current = streamWorkflow(
       'tool-research',
@@ -56,14 +58,18 @@ const ToolResearchWorkflow = () => {
         onProgress: (data) => {
           setCurrentStep(data.step);
           setProgressMessage(data.message);
+          console.log(`[Tool Research] ${data.step}: ${data.message}`);
         },
         onStepComplete: (data) => {
-          if (data.step === 'research') {
+          // Capture final result with all steps
+          if (data.step === 'final') {
             setResult(data.data);
           }
           setProgressMessage('');
         },
         onComplete: () => {
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('tool-research', topic, result, executionTime, 'completed');
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
@@ -75,11 +81,11 @@ const ToolResearchWorkflow = () => {
           setProgressMessage('');
         },
         onCacheHit: (data) => {
-          setResult(data);
+          const cacheResult = { ...data, cacheHit: true };
+          setResult(cacheResult);
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('tool-research', topic, cacheResult, executionTime, 'completed');
           setLoading(false);
-          setCurrentStep(null);
-          setProgressMessage('Cache hit - instant results!');
-          setTimeout(() => setProgressMessage(''), 3000);
         }
       }
     );
@@ -160,8 +166,17 @@ const ToolResearchWorkflow = () => {
       {loading && (
         <div className="card text-center py-12">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600 mt-4">Searching across selected sources...</p>
-          <p className="text-sm text-gray-500 mt-2">This may take 30-60 seconds</p>
+          {progressMessage ? (
+            <>
+              <p className="text-gray-600 mt-4 font-medium">{progressMessage}</p>
+              <p className="text-sm text-gray-500 mt-2">Step: {currentStep}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mt-4">Searching across selected sources...</p>
+              <p className="text-sm text-gray-500 mt-2">This may take 30-60 seconds</p>
+            </>
+          )}
         </div>
       )}
       

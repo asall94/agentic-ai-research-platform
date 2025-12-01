@@ -46,6 +46,14 @@ Topic: "{topic}"
             )
             
             steps_str = response.choices[0].message.content.strip()
+            
+            # Remove markdown code block wrapper if present
+            if steps_str.startswith("```python"):
+                steps_str = steps_str.split("```python", 1)[1]
+            if steps_str.endswith("```"):
+                steps_str = steps_str.rsplit("```", 1)[0]
+            steps_str = steps_str.strip()
+            
             steps = ast.literal_eval(steps_str)
             
             self.log_execution(topic, f"Generated {len(steps)} steps")

@@ -19,8 +19,14 @@ class ResearchAgent(BaseAgent):
         """Execute research task using available tools"""
         
         if tools is None:
-            from app.tools import arxiv_search_tool, tavily_search_tool, wikipedia_search_tool
-            tools = [arxiv_search_tool, tavily_search_tool, wikipedia_search_tool]
+            from app.tools.arxiv_tool import arxiv_tool_def
+            from app.tools.tavily_tool import tavily_tool_def
+            from app.tools.wikipedia_tool import wikipedia_tool_def
+            tools = [arxiv_tool_def, tavily_tool_def, wikipedia_tool_def]
+        
+        # Allow empty tools list for testing
+        if tools == []:
+            tools = None
         
         current_time = datetime.now().strftime('%Y-%m-%d')
         
@@ -45,18 +51,31 @@ Instructions:
         try:
             messages = [{"role": "user", "content": prompt}]
             
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",
-                max_turns=6
-            )
+            kwargs = {
+                "model": self.model,
+                "messages": messages
+            }
+            if tools:
+                kwargs["tools"] = tools
+                kwargs["tool_choice"] = "auto"
             
-            result = response.choices[0].message.content
+            # First response - may have tool calls
+            response = self.client.chat.completions.create(**kwargs)
+            message = response.choices[0].message
+            
+            # If no tools or no tool calls, return content directly
+            if not tools or not hasattr(message, 'tool_calls') or not message.tool_calls:
+                result = message.content
+                self.log_execution(task, result)
+                return result
+            
+            # Handle tool calls - for now, return a summary since we can't execute them in streaming
+            # In a real implementation, you'd execute the tools and continue the conversation
+            result = f"Research agent attempted to use tools but tool execution is not yet implemented in streaming mode. Tool calls: {len(message.tool_calls)}"
             self.log_execution(task, result)
             return result
             
         except Exception as e:
             logger.error(f"Research agent error: {e}")
             raise
+

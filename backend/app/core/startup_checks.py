@@ -54,7 +54,7 @@ def check_requirements():
         "uvicorn": "Uvicorn",
         "openai": "OpenAI",
         "pydantic": "Pydantic",
-        "python_dotenv": "python-dotenv"
+        "dotenv": "python-dotenv"
     }
     
     for package, name in required_packages.items():

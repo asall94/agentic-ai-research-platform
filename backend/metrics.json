@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2025-12-01T21:27:57.265422",
+    "workflow_type": "simple_reflection",
+    "topic": "AI ethics",
+    "execution_time_seconds": 0.0,
+    "cache_hit": false,
+    "tokens_used": null,
+    "cost_usd": null,
+    "steps_count": 3,
+    "agents_used": [
+      "draft",
+      "reflection",
+      "revision"
+    ]
+  },
+  {
+    "timestamp": "2025-12-01T21:27:57.290087",
+    "workflow_type": "simple_reflection",
+    "topic": "Test topic",
+    "execution_time_seconds": 0.0,
+    "cache_hit": false,
+    "tokens_used": null,
+    "cost_usd": null,
+    "steps_count": 3,
+    "agents_used": [
+      "draft",
+      "reflection",
+      "revision"
+    ]
+  },
+  {
+    "timestamp": "2025-12-01T21:49:26.562228",
+    "workflow_type": "simple_reflection",
+    "topic": "AI ethics",
+    "execution_time_seconds": 1.95,
+    "cache_hit": false,
+    "tokens_used": null,
+    "cost_usd": null,
+    "steps_count": 3,
+    "agents_used": [
+      "draft",
+      "reflection",
+      "revision"
+    ]
+  },
+  {
+    "timestamp": "2025-12-01T21:49:28.454177",
+    "workflow_type": "simple_reflection",
+    "topic": "Test topic",
+    "execution_time_seconds": 1.83,
+    "cache_hit": false,
+    "tokens_used": null,
+    "cost_usd": null,
+    "steps_count": 3,
+    "agents_used": [
+      "draft",
+      "reflection",
+      "revision"
+    ]
+  }
+]

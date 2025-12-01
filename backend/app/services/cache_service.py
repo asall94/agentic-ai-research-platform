@@ -2,7 +2,6 @@ import redis
 import hashlib
 import json
 import numpy as np
-from sentence_transformers import SentenceTransformer
 from typing import Optional, Dict, Any, List, Tuple
 from app.core.config import settings
 import logging
@@ -27,6 +26,8 @@ class CacheService:
                 self.redis_client.ping()
                 logger.info(f"Redis connected: {settings.REDIS_URL}")
                 
+                # Lazy import to avoid loading torch when cache is disabled
+                from sentence_transformers import SentenceTransformer
                 self.model = SentenceTransformer(settings.EMBEDDING_MODEL)
                 logger.info(f"Embedding model loaded: {settings.EMBEDDING_MODEL}")
             except Exception as e:

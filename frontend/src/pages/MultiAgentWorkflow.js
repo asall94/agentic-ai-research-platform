@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { streamWorkflow } from '../services/streamingApi';
-import { LoadingSpinner, StatusBadge } from '../components/WorkflowCard';
+import { historyService } from '../services/historyService';
+import { LoadingSpinner } from '../components/WorkflowCard';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 
@@ -29,6 +30,7 @@ const MultiAgentWorkflow = () => {
     setResult({ plan: [], history: [], final_report: '' });
     setCurrentStep('planning');
     setProgressMessage('');
+    const startTime = Date.now();
     
     cleanupRef.current = streamWorkflow(
       'multi-agent',
@@ -57,6 +59,8 @@ const MultiAgentWorkflow = () => {
           setProgressMessage('');
         },
         onComplete: () => {
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('multi-agent', topic, result, executionTime, 'completed');
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
@@ -68,11 +72,15 @@ const MultiAgentWorkflow = () => {
           setProgressMessage('');
         },
         onCacheHit: (data) => {
-          setResult({
+          const cacheResult = {
             plan: data.plan || [],
             history: data.history || [],
-            final_report: data.final_report || ''
-          });
+            final_report: data.final_report || '',
+            cacheHit: true
+          };
+          setResult(cacheResult);
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('multi-agent', topic, cacheResult, executionTime, 'completed');
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('Cache hit - instant results!');
@@ -152,7 +160,24 @@ const MultiAgentWorkflow = () => {
         </div>
       )}
       
-      {progressMessage && (
+      {loading && !result && (
+        <div className="card text-center py-12">
+          <LoadingSpinner size="lg" />
+          {progressMessage ? (
+            <>
+              <p className="text-gray-600 mt-4 font-medium">{progressMessage}</p>
+              <p className="text-sm text-gray-500 mt-2">Step: {currentStep}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mt-4">Orchestrating multi-agent workflow...</p>
+              <p className="text-sm text-gray-500 mt-2">This may take 60-90 seconds</p>
+            </>
+          )}
+        </div>
+      )}
+      
+      {progressMessage && result && (
         <div className={`card mb-6 ${progressMessage.includes('Cache hit') ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
           <div className="flex items-center space-x-3">
             {!progressMessage.includes('Cache hit') && <LoadingSpinner size="sm" />}

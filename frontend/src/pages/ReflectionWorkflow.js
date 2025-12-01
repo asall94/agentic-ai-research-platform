@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { streamWorkflow } from '../services/streamingApi';
-import { LoadingSpinner, StatusBadge } from '../components/WorkflowCard';
+import { historyService } from '../services/historyService';
+import { LoadingSpinner } from '../components/WorkflowCard';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 
@@ -28,6 +29,7 @@ const ReflectionWorkflow = () => {
     setResult({ draft: '', reflection: '', revised: '' });
     setCurrentStep('draft');
     setProgressMessage('');
+    const startTime = Date.now();
     
     cleanupRef.current = streamWorkflow(
       'reflection',
@@ -45,6 +47,8 @@ const ReflectionWorkflow = () => {
           setProgressMessage('');
         },
         onComplete: () => {
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('reflection', topic, result, executionTime, 'completed');
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('');
@@ -57,11 +61,15 @@ const ReflectionWorkflow = () => {
         },
         onCacheHit: (data) => {
           // Cache hit - populate all fields immediately
-          setResult({
+          const cacheResult = {
             draft: data.draft,
             reflection: data.reflection,
-            revised: data.revised
-          });
+            revised: data.revised,
+            cacheHit: true
+          };
+          setResult(cacheResult);
+          const executionTime = Date.now() - startTime;
+          historyService.saveExecution('reflection', topic, cacheResult, executionTime, 'completed');
           setLoading(false);
           setCurrentStep(null);
           setProgressMessage('Cache hit - instant results!');

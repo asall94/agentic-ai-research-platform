@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BeakerIcon, DocumentTextIcon, HomeIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { BeakerIcon, HomeIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 const Header = () => {
   const location = useLocation();
@@ -30,18 +30,6 @@ const Header = () => {
             >
               <HomeIcon className="h-5 w-5" />
               <span>Home</span>
-            </Link>
-            
-            <Link
-              to="/workflows"
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
-                isActive('/workflows') 
-                  ? 'bg-white/20 font-semibold' 
-                  : 'hover:bg-white/10'
-              }`}
-            >
-              <DocumentTextIcon className="h-5 w-5" />
-              <span>Workflows</span>
             </Link>
             
             <Link

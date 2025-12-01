@@ -1,5 +1,7 @@
 from app.agents import ResearchAgent, EditorAgent
-from app.tools import arxiv_search_tool, tavily_search_tool, wikipedia_search_tool
+from app.tools.arxiv_tool import arxiv_search_tool, arxiv_tool_def
+from app.tools.tavily_tool import tavily_search_tool, tavily_tool_def
+from app.tools.wikipedia_tool import wikipedia_search_tool, wikipedia_tool_def
 from app.core.config import settings
 from openai import OpenAI
 import json
@@ -21,18 +23,25 @@ class ToolResearchWorkflow:
         self.max_results = max_results
         self.client = OpenAI()
         
-        # Map tool names to functions
-        self.tool_mapping = {
+        # Map tool names to definitions for OpenAI API
+        self.tool_def_mapping = {
+            "arxiv": arxiv_tool_def,
+            "tavily": tavily_tool_def,
+            "wikipedia": wikipedia_tool_def
+        }
+        
+        # Map tool names to functions for execution
+        self.tool_func_mapping = {
             "arxiv": arxiv_search_tool,
             "tavily": tavily_search_tool,
             "wikipedia": wikipedia_search_tool
         }
         
-        # Select tools
+        # Select tool definitions (not functions) for OpenAI API
         if tools:
-            self.tools = [self.tool_mapping[t] for t in tools if t in self.tool_mapping]
+            self.tools = [self.tool_def_mapping[t] for t in tools if t in self.tool_def_mapping]
         else:
-            self.tools = list(self.tool_mapping.values())
+            self.tools = list(self.tool_def_mapping.values())
     
     async def execute(self, topic: str, export_format: str = "html") -> dict:
         """Execute the tool research workflow"""

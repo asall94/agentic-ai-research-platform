@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import ReflectionWorkflow from './pages/ReflectionWorkflow';
 import ToolResearchWorkflow from './pages/ToolResearchWorkflow';
 import MultiAgentWorkflow from './pages/MultiAgentWorkflow';
+import History from './pages/History';
 
 function App() {
   return (
@@ -19,14 +20,7 @@ function App() {
             <Route path="/workflows/reflection" element={<ReflectionWorkflow />} />
             <Route path="/workflows/tool-research" element={<ToolResearchWorkflow />} />
             <Route path="/workflows/multi-agent" element={<MultiAgentWorkflow />} />
-            <Route path="/history" element={
-              <div className="container mx-auto px-4 py-8">
-                <div className="card">
-                  <h1 className="text-2xl font-bold mb-4">Workflow History</h1>
-                  <p className="text-gray-600">Coming soon... View your past workflow executions here.</p>
-                </div>
-              </div>
-            } />
+            <Route path="/history" element={<History />} />
           </Routes>
         </main>
         <Footer />

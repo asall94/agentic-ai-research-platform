@@ -10,7 +10,7 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
     """
     try:
         # Start event
-        yield json.dumps({
+        yield "data: " + json.dumps({
             "type": "start",
             "workflow_type": workflow_type,
             "topic": topic
@@ -22,12 +22,12 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
         cached_result = cache_service.get_cached_result(topic, workflow_type.replace("-", "_"))
         if cached_result:
             # Cache hit - send full result immediately
-            yield json.dumps({
+            yield "data: " + json.dumps({
                 "type": "cache_hit",
                 "data": cached_result
             }) + "\n\n"
             
-            yield json.dumps({"type": "complete"}) + "\n\n"
+            yield "data: " + json.dumps({"type": "complete"}) + "\n\n"
             return
         
         # Cache miss - stream workflow execution
@@ -37,35 +37,53 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
             async for event in stream_reflection_workflow(workflow_func, topic, **kwargs):
                 yield event
                 # Capture step data for caching
-                event_data = json.loads(event.strip())
-                if event_data.get("type") == "step_complete":
-                    result_data[event_data["step"]] = event_data["data"]
+                try:
+                    event_str = event.strip()
+                    if event_str.startswith("data: "):
+                        event_str = event_str[6:]  # Remove "data: " prefix
+                    event_data = json.loads(event_str)
+                    if event_data.get("type") == "step_complete":
+                        result_data[event_data["step"]] = event_data["data"]
+                except (json.JSONDecodeError, KeyError):
+                    pass  # Skip malformed events
         elif workflow_type == "tool_research":
             async for event in stream_tool_research_workflow(workflow_func, topic, **kwargs):
                 yield event
-                event_data = json.loads(event.strip())
-                if event_data.get("type") == "step_complete":
-                    result_data = event_data["data"]
+                try:
+                    event_str = event.strip()
+                    if event_str.startswith("data: "):
+                        event_str = event_str[6:]
+                    event_data = json.loads(event_str)
+                    if event_data.get("type") == "step_complete":
+                        result_data = event_data["data"]
+                except (json.JSONDecodeError, KeyError):
+                    pass
         elif workflow_type == "multi_agent":
             async for event in stream_multi_agent_workflow(workflow_func, topic, **kwargs):
                 yield event
-                event_data = json.loads(event.strip())
-                if event_data.get("type") == "step_complete":
-                    step = event_data["step"]
-                    if step == "plan":
-                        result_data["plan"] = event_data["data"]
-                    elif step == "final":
-                        result_data = event_data["data"]
+                try:
+                    event_str = event.strip()
+                    if event_str.startswith("data: "):
+                        event_str = event_str[6:]
+                    event_data = json.loads(event_str)
+                    if event_data.get("type") == "step_complete":
+                        step = event_data["step"]
+                        if step == "plan":
+                            result_data["plan"] = event_data["data"]
+                        elif step == "final":
+                            result_data = event_data["data"]
+                except (json.JSONDecodeError, KeyError):
+                    pass
         
         # Store in cache after streaming completes
         if result_data:
             cache_service.store_result(topic, workflow_type.replace("-", "_"), result_data)
         
         # Completion event
-        yield json.dumps({"type": "complete"}) + "\n\n"
+        yield "data: " + json.dumps({"type": "complete"}) + "\n\n"
         
     except Exception as e:
-        yield json.dumps({
+        yield "data: " + json.dumps({
             "type": "error",
             "message": str(e)
         }) + "\n\n"
@@ -75,42 +93,42 @@ async def stream_reflection_workflow(workflow, topic: str, **kwargs) -> AsyncGen
     """Stream reflection workflow: draft → reflection → revised"""
     
     # Draft step
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "progress",
         "step": "draft",
         "message": "Generating initial draft..."
     }) + "\n\n"
     
     draft = await workflow.draft_agent.execute(topic)
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "draft",
         "data": draft
     }) + "\n\n"
     
     # Reflection step
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "progress",
         "step": "reflection",
         "message": "Analyzing draft and generating critique..."
     }) + "\n\n"
     
     reflection = await workflow.reflection_agent.execute(draft)
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "reflection",
         "data": reflection
     }) + "\n\n"
     
     # Revision step
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "progress",
         "step": "revision",
         "message": "Revising based on feedback..."
     }) + "\n\n"
     
     revised = await workflow.revision_agent.execute(draft, reflection)
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "revised",
         "data": revised
@@ -118,22 +136,81 @@ async def stream_reflection_workflow(workflow, topic: str, **kwargs) -> AsyncGen
 
 
 async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> AsyncGenerator[str, None]:
-    """Stream tool research workflow"""
+    """Stream tool research workflow with detailed progress"""
     
-    tools = kwargs.get("tools", ["arxiv", "wikipedia", "tavily"])
+    from app.agents import ResearchAgent, ReflectionAgent, RevisionAgent
     
-    yield json.dumps({
+    # Step 1: Research (without tools for streaming - tools require complex iteration)
+    yield "data: " + json.dumps({
         "type": "progress",
         "step": "research",
-        "message": f"Searching {', '.join(tools)}..."
+        "message": "Conducting research..."
     }) + "\n\n"
     
-    result = await workflow.execute(topic, tools=tools)
+    research_agent = ResearchAgent(model=workflow.model)
+    # Don't pass tools in streaming mode - too complex to handle tool calls
+    research_report = await research_agent.execute(topic)
     
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "research",
-        "data": result
+        "data": research_report
+    }) + "\n\n"
+    
+    # Step 2: Reflection
+    yield "data: " + json.dumps({
+        "type": "progress",
+        "step": "reflection",
+        "message": "Analyzing research quality..."
+    }) + "\n\n"
+    
+    reflection_agent = ReflectionAgent(model=workflow.model)
+    reflection = await reflection_agent.execute(research_report)
+    
+    yield "data: " + json.dumps({
+        "type": "step_complete",
+        "step": "reflection",
+        "data": reflection
+    }) + "\n\n"
+    
+    # Step 3: Revision
+    yield "data: " + json.dumps({
+        "type": "progress",
+        "step": "revision",
+        "message": "Revising based on analysis..."
+    }) + "\n\n"
+    
+    revision_agent = RevisionAgent(model=workflow.model)
+    revised_report = await revision_agent.execute(research_report, reflection)
+    
+    yield "data: " + json.dumps({
+        "type": "step_complete",
+        "step": "revised",
+        "data": revised_report
+    }) + "\n\n"
+    
+    # Step 4: HTML conversion
+    yield "data: " + json.dumps({
+        "type": "progress",
+        "step": "formatting",
+        "message": "Formatting output..."
+    }) + "\n\n"
+    
+    html_output = await workflow._convert_to_html(revised_report)
+    
+    # Final result
+    final_result = {
+        "research_report": research_report,
+        "reflection": reflection,
+        "revised_report": revised_report,
+        "html_output": html_output,
+        "sources": []
+    }
+    
+    yield "data: " + json.dumps({
+        "type": "step_complete",
+        "step": "final",
+        "data": final_result
     }) + "\n\n"
 
 
@@ -143,7 +220,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     max_steps = kwargs.get("max_steps", 4)
     
     # Planning step
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "progress",
         "step": "planning",
         "message": "Generating execution plan..."
@@ -156,7 +233,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     if workflow.limit_steps:
         plan_steps = plan_steps[:min(len(plan_steps), max_steps)]
     
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "plan",
         "data": plan_steps
@@ -165,7 +242,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     # Execute each step
     history = []
     for i, step in enumerate(plan_steps, 1):
-        yield json.dumps({
+        yield "data: " + json.dumps({
             "type": "progress",
             "step": f"step_{i}",
             "message": f"Step {i}/{len(plan_steps)}: {step[:60]}..."
@@ -186,7 +263,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
         
         history.append({"step": step, "agent": agent_name, "output": output})
         
-        yield json.dumps({
+        yield "data: " + json.dumps({
             "type": "step_complete",
             "step": f"step_{i}",
             "data": {"step": step, "agent": agent_name, "output": output}
@@ -194,7 +271,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     
     # Final output
     final_output = history[-1]["output"] if history else "No output generated"
-    yield json.dumps({
+    yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "final",
         "data": {"plan": plan_steps, "history": history, "final_report": final_output}

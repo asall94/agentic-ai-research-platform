@@ -1,5 +1,6 @@
 import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
 from unittest.mock import patch, AsyncMock
 import sys
 import os
@@ -10,20 +11,26 @@ sys.modules['app.core.startup_checks'].check_requirements = lambda: True
 
 from main import app
 
-client = TestClient(app)
+@pytest_asyncio.fixture
+async def client():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 class TestHealthEndpoint:
     """Test suite for health check endpoint"""
     
-    def test_health_check_returns_200(self):
+    @pytest.mark.asyncio
+    async def test_health_check_returns_200(self, client):
         """Health endpoint should return 200 status"""
-        response = client.get("/api/v1/health")
+        response = await client.get("/api/v1/health")
         assert response.status_code == 200
     
-    def test_health_check_response_structure(self):
+    @pytest.mark.asyncio
+    async def test_health_check_response_structure(self, client):
         """Health endpoint should return proper JSON structure"""
-        response = client.get("/api/v1/health")
+        response = await client.get("/api/v1/health")
         data = response.json()
         
         assert "status" in data
@@ -33,8 +40,9 @@ class TestHealthEndpoint:
 class TestReflectionWorkflowEndpoint:
     """Test suite for reflection workflow endpoint"""
     
+    @pytest.mark.asyncio
     @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    def test_reflection_workflow_returns_200(self, mock_execute):
+    async def test_reflection_workflow_returns_200(self, mock_execute, client):
         """Reflection workflow should return 200 on success"""
         mock_execute.return_value = {
             "draft": "Draft content",
@@ -42,15 +50,16 @@ class TestReflectionWorkflowEndpoint:
             "revised": "Final content"
         }
         
-        response = client.post(
+        response = await client.post(
             "/api/v1/workflows/reflection",
             json={"topic": "AI ethics"}
         )
         
         assert response.status_code == 200
     
+    @pytest.mark.asyncio
     @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    def test_reflection_workflow_response_structure(self, mock_execute):
+    async def test_reflection_workflow_response_structure(self, mock_execute, client):
         """Reflection workflow should return proper response structure"""
         mock_execute.return_value = {
             "draft": "Draft",
@@ -58,7 +67,7 @@ class TestReflectionWorkflowEndpoint:
             "revised": "Final"
         }
         
-        response = client.post(
+        response = await client.post(
             "/api/v1/workflows/reflection",
             json={"topic": "Test topic"}
         )
@@ -71,9 +80,10 @@ class TestReflectionWorkflowEndpoint:
         assert "reflection" in data
         assert "revised" in data
     
-    def test_reflection_workflow_requires_topic(self):
+    @pytest.mark.asyncio
+    async def test_reflection_workflow_requires_topic(self, client):
         """Reflection workflow should require topic parameter"""
-        response = client.post(
+        response = await client.post(
             "/api/v1/workflows/reflection",
             json={}
         )
@@ -84,21 +94,23 @@ class TestReflectionWorkflowEndpoint:
 class TestRateLimiting:
     """Test suite for rate limiting middleware"""
     
-    def test_rate_limit_headers_present(self):
+    @pytest.mark.asyncio
+    async def test_rate_limit_headers_present(self, client):
         """Rate limit headers should be present in response"""
         # Health endpoint bypasses rate limiting, use metrics instead
-        response = client.get("/api/v1/metrics/summary")
+        response = await client.get("/api/v1/metrics/summary")
         
         assert "X-RateLimit-Limit" in response.headers
         assert "X-RateLimit-Remaining" in response.headers
         assert "X-RateLimit-Reset" in response.headers
     
-    def test_rate_limit_decrements(self):
+    @pytest.mark.asyncio
+    async def test_rate_limit_decrements(self, client):
         """Rate limit remaining should decrement with each request"""
-        response1 = client.get("/api/v1/metrics/summary")
+        response1 = await client.get("/api/v1/metrics/summary")
         remaining1 = int(response1.headers["X-RateLimit-Remaining"])
         
-        response2 = client.get("/api/v1/metrics/summary")
+        response2 = await client.get("/api/v1/metrics/summary")
         remaining2 = int(response2.headers["X-RateLimit-Remaining"])
         
         # Should decrement or stay same (time window reset)
@@ -108,14 +120,16 @@ class TestRateLimiting:
 class TestCacheEndpoints:
     """Test suite for cache management endpoints"""
     
-    def test_cache_stats_returns_200(self):
+    @pytest.mark.asyncio
+    async def test_cache_stats_returns_200(self, client):
         """Cache stats endpoint should return 200"""
-        response = client.get("/api/v1/cache/stats")
+        response = await client.get("/api/v1/cache/stats")
         assert response.status_code == 200
     
-    def test_cache_stats_response_structure(self):
+    @pytest.mark.asyncio
+    async def test_cache_stats_response_structure(self, client):
         """Cache stats should return proper structure"""
-        response = client.get("/api/v1/cache/stats")
+        response = await client.get("/api/v1/cache/stats")
         data = response.json()
         
         # Stats should be a dict (may be empty if no cache)
@@ -125,14 +139,16 @@ class TestCacheEndpoints:
 class TestMetricsEndpoints:
     """Test suite for metrics endpoints"""
     
-    def test_metrics_summary_returns_200(self):
+    @pytest.mark.asyncio
+    async def test_metrics_summary_returns_200(self, client):
         """Metrics summary endpoint should return 200"""
-        response = client.get("/api/v1/metrics/summary")
+        response = await client.get("/api/v1/metrics/summary")
         assert response.status_code == 200
     
-    def test_metrics_summary_response_structure(self):
+    @pytest.mark.asyncio
+    async def test_metrics_summary_response_structure(self, client):
         """Metrics summary should return proper structure"""
-        response = client.get("/api/v1/metrics/summary")
+        response = await client.get("/api/v1/metrics/summary")
         data = response.json()
         
         assert "total_requests" in data
@@ -141,10 +157,11 @@ class TestMetricsEndpoints:
 class TestCORSHeaders:
     """Test suite for CORS configuration"""
     
-    def test_cors_headers_present(self):
+    @pytest.mark.asyncio
+    async def test_cors_headers_present(self, client):
         """CORS headers should be present in response"""
         # Test with actual GET request and Origin header
-        response = client.get("/api/v1/health", headers={"Origin": "http://localhost:3000"})
+        response = await client.get("/api/v1/health", headers={"Origin": "http://localhost:3000"})
         
         assert response.status_code == 200
 
@@ -152,17 +169,19 @@ class TestCORSHeaders:
 class TestErrorHandling:
     """Test suite for error handling"""
     
-    def test_404_for_invalid_endpoint(self):
+    @pytest.mark.asyncio
+    async def test_404_for_invalid_endpoint(self, client):
         """Invalid endpoints should return 404"""
-        response = client.get("/api/v1/nonexistent")
+        response = await client.get("/api/v1/nonexistent")
         assert response.status_code == 404
     
+    @pytest.mark.asyncio
     @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    def test_500_on_workflow_failure(self, mock_execute):
+    async def test_500_on_workflow_failure(self, mock_execute, client):
         """Workflow failures should return proper error response"""
         mock_execute.side_effect = Exception("Workflow error")
         
-        response = client.post(
+        response = await client.post(
             "/api/v1/workflows/reflection",
             json={"topic": "Test"}
         )
