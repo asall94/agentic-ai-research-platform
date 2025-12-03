@@ -447,7 +447,7 @@ const ReflectionWorkflow = () => {
           
           {result.draft && (
             <div className="card bg-blue-50">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">🧠 Reflection</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Reflection</h2>
               {currentStep === 'reflection' && progressMessage && (
                 <div className="flex items-center space-x-3 p-4 bg-blue-100 rounded-lg mb-4">
                   <LoadingSpinner size="sm" />
@@ -467,7 +467,7 @@ const ReflectionWorkflow = () => {
           {result.reflection && (
             <div className="card bg-purple-50">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">✍️ Revised Draft</h2>
+                <h2 className="text-xl font-bold text-gray-800">Revised Draft</h2>
                 {result.revised && (
                   <button
                     onClick={() => downloadResult(result.revised, 'revised.txt')}
