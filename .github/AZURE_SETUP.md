@@ -288,13 +288,13 @@ az containerapp update `
 
 ## Next Steps
 
-1. ✅ Configure GitHub Secrets
-2. ✅ Update backend URL in workflow
-3. ✅ Test first deployment
-4. ✅ Monitor logs and metrics
-5. ✅ Set up branch protection rules (require CI to pass)
-6. ✅ Configure Codecov integration
-7. ✅ Add deployment notifications (Slack, email)
+1. Configure GitHub Secrets
+2. Update backend URL in workflow
+3. Test first deployment
+4. Monitor logs and metrics
+5. Set up branch protection rules (require CI to pass)
+6. Configure Codecov integration
+7. Add deployment notifications (Slack, email)
 
 ## Resources
 

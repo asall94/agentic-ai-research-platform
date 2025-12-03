@@ -265,6 +265,17 @@ async def execute_multi_agent_workflow(request: MultiAgentWorkflowRequest):
 async def stream_reflection_workflow(topic: str, draft_model: str = None, reflection_model: str = None, revision_model: str = None):
     """Stream reflection workflow with real-time progress events"""
     
+    # Validate topic
+    topic = topic.strip()
+    if not topic:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic cannot be empty"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    if len(topic) > 500:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic must be 500 characters or less"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    
     workflow = SimpleReflectionWorkflow(
         draft_model=draft_model,
         reflection_model=reflection_model,
@@ -285,6 +296,17 @@ async def stream_reflection_workflow(topic: str, draft_model: str = None, reflec
 @router.get("/tool-research/stream")
 async def stream_tool_research_workflow(topic: str, tools: str = "arxiv,wikipedia,tavily", model: str = None, max_results: int = 3):
     """Stream tool research workflow with real-time progress events"""
+    
+    # Validate topic
+    topic = topic.strip()
+    if not topic:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic cannot be empty"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    if len(topic) > 500:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic must be 500 characters or less"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     tools_list = [t.strip() for t in tools.split(",")]
     
@@ -308,6 +330,17 @@ async def stream_tool_research_workflow(topic: str, tools: str = "arxiv,wikipedi
 @router.get("/multi-agent/stream")
 async def stream_multi_agent_workflow(topic: str, max_steps: int = 4, model: str = None):
     """Stream multi-agent workflow with real-time progress events"""
+    
+    # Validate topic
+    topic = topic.strip()
+    if not topic:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic cannot be empty"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    if len(topic) > 500:
+        async def error_stream():
+            yield "data: " + json.dumps({"type": "error", "message": "Topic must be 500 characters or less"}) + "\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     workflow = MultiAgentWorkflow(
         model=model,

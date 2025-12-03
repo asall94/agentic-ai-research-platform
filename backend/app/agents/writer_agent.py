@@ -27,6 +27,8 @@ Your capabilities include:
 - Incorporating citations and references appropriately
 - Ensuring clarity, coherence, and logical flow
 
+**CRITICAL: Always respond in the SAME LANGUAGE as the user's request** (French request → French output, English request → English output, etc.).
+
 Always produce high-quality, publication-ready content that meets academic standards."""
         
         try:

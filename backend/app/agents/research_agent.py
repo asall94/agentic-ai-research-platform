@@ -15,63 +15,102 @@ class ResearchAgent(BaseAgent):
         super().__init__(model, temperature or settings.RESEARCH_TEMPERATURE)
         self.client = OpenAI()
     
-    async def execute(self, task: str, tools: list = None, **kwargs) -> str:
-        """Execute research task using available tools"""
+    async def execute(self, task: str, tools: list = None, tool_func_mapping: dict = None, **kwargs) -> str:
+        """Execute research task using available tools with full execution support"""
         
+        # Setup tools and functions
         if tools is None:
-            from app.tools.arxiv_tool import arxiv_tool_def
-            from app.tools.tavily_tool import tavily_tool_def
-            from app.tools.wikipedia_tool import wikipedia_tool_def
+            from app.tools.arxiv_tool import arxiv_tool_def, arxiv_search_tool
+            from app.tools.tavily_tool import tavily_tool_def, tavily_search_tool
+            from app.tools.wikipedia_tool import wikipedia_tool_def, wikipedia_search_tool
+            
             tools = [arxiv_tool_def, tavily_tool_def, wikipedia_tool_def]
+            tool_func_mapping = {
+                "arxiv_search_tool": arxiv_search_tool,
+                "tavily_search_tool": tavily_search_tool,
+                "wikipedia_search_tool": wikipedia_search_tool
+            }
         
         # Allow empty tools list for testing
         if tools == []:
             tools = None
+            tool_func_mapping = None
         
         current_time = datetime.now().strftime('%Y-%m-%d')
         
         prompt = f"""You are an expert research assistant with access to multiple research tools.
 
-🔧 Available Tools:
+Available Tools:
 - arxiv_search_tool: Search academic papers and preprints from arXiv
 - tavily_search_tool: Perform general web searches for recent information
 - wikipedia_search_tool: Access encyclopedic knowledge and summaries
 
-📅 Current Date: {current_time}
+Current Date: {current_time}
 
-🎯 Task: {task}
+Task: {task}
 
 Instructions:
 - Use the appropriate tools to gather comprehensive information
 - Synthesize findings from multiple sources when relevant
 - Provide accurate, well-sourced responses
 - Include citations and references when available
-- Be thorough and academic in your research approach"""
+- Be thorough and academic in your research approach
+- **CRITICAL: Respond in the SAME LANGUAGE as the task** (French task → French response, English task → English response, etc.)"""
         
         try:
             messages = [{"role": "user", "content": prompt}]
             
-            kwargs = {
+            # First API call - may return tool_calls
+            kwargs_api = {
                 "model": self.model,
                 "messages": messages
             }
             if tools:
-                kwargs["tools"] = tools
-                kwargs["tool_choice"] = "auto"
+                kwargs_api["tools"] = tools
+                kwargs_api["tool_choice"] = "auto"
             
-            # First response - may have tool calls
-            response = self.client.chat.completions.create(**kwargs)
+            # Get initial response
+            response = self.client.chat.completions.create(**kwargs_api)
             message = response.choices[0].message
             
-            # If no tools or no tool calls, return content directly
-            if not tools or not hasattr(message, 'tool_calls') or not message.tool_calls:
+            # If tools were used, need to execute them manually (SDK doesn't auto-execute)
+            if tools and hasattr(message, 'tool_calls') and message.tool_calls:
+                # Execute tools and continue conversation
+                messages.append({
+                    "role": "assistant",
+                    "content": message.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {"name": tc.function.name, "arguments": tc.function.arguments}
+                        }
+                        for tc in message.tool_calls
+                    ]
+                })
+                
+                # Execute each tool call
+                for tool_call in message.tool_calls:
+                    func_name = tool_call.function.name
+                    func_args = json.loads(tool_call.function.arguments)
+                    
+                    if func_name in tool_func_mapping:
+                        tool_result = tool_func_mapping[func_name](**func_args)
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": json.dumps(tool_result)
+                        })
+                
+                # Get final response after tool execution
+                final_response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages
+                )
+                result = final_response.choices[0].message.content
+            else:
                 result = message.content
-                self.log_execution(task, result)
-                return result
             
-            # Handle tool calls - for now, return a summary since we can't execute them in streaming
-            # In a real implementation, you'd execute the tools and continue the conversation
-            result = f"Research agent attempted to use tools but tool execution is not yet implemented in streaming mode. Tool calls: {len(message.tool_calls)}"
             self.log_execution(task, result)
             return result
             

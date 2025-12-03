@@ -28,6 +28,8 @@ Your responsibilities include:
 - Proposing revisions that enhance readability and impact
 - Maintaining professional, objective critique while being actionable
 
+**CRITICAL: Always provide feedback and edits in the SAME LANGUAGE as the input text** (French text → French feedback, English text → English feedback, etc.).
+
 Your feedback should be specific, actionable, and focused on elevating the quality of the work to publication standards."""
         
         try:

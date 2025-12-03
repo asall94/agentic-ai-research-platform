@@ -136,20 +136,31 @@ async def stream_reflection_workflow(workflow, topic: str, **kwargs) -> AsyncGen
 
 
 async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> AsyncGenerator[str, None]:
-    """Stream tool research workflow with detailed progress"""
+    """Stream tool research workflow with detailed progress including tool execution"""
     
     from app.agents import ResearchAgent, ReflectionAgent, RevisionAgent
+    from app.tools.arxiv_tool import arxiv_tool_def, arxiv_search_tool
+    from app.tools.tavily_tool import tavily_tool_def, tavily_search_tool
+    from app.tools.wikipedia_tool import wikipedia_tool_def, wikipedia_search_tool
     
-    # Step 1: Research (without tools for streaming - tools require complex iteration)
+    # Setup tools
+    tools = [arxiv_tool_def, tavily_tool_def, wikipedia_tool_def]
+    tool_func_mapping = {
+        "arxiv_search_tool": arxiv_search_tool,
+        "tavily_search_tool": tavily_search_tool,
+        "wikipedia_search_tool": wikipedia_search_tool
+    }
+    
+    # Step 1: Research with real tools
     yield "data: " + json.dumps({
         "type": "progress",
         "step": "research",
-        "message": "Conducting research..."
+        "message": "Conducting research with arXiv, Tavily, and Wikipedia..."
     }) + "\n\n"
     
     research_agent = ResearchAgent(model=workflow.model)
-    # Don't pass tools in streaming mode - too complex to handle tool calls
-    research_report = await research_agent.execute(topic)
+    # Pass tools and function mapping for full research capability
+    research_report = await research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -185,7 +196,7 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     yield "data: " + json.dumps({
         "type": "step_complete",
-        "step": "revised",
+        "step": "revision",
         "data": revised_report
     }) + "\n\n"
     
@@ -219,13 +230,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     
     max_steps = kwargs.get("max_steps", 4)
     
-    # Planning step
-    yield "data: " + json.dumps({
-        "type": "progress",
-        "step": "planning",
-        "message": "Generating execution plan..."
-    }) + "\n\n"
-    
+    # Planning step - silently execute (plan already shown in frontend)
     from app.agents import PlannerAgent
     planner = PlannerAgent()
     plan_steps = await planner.execute(topic)

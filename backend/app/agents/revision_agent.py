@@ -34,6 +34,8 @@ Your task is to rewrite the essay, incorporating all the feedback provided above
 6. **Fix any grammatical or stylistic issues** identified
 7. **Maintain the original topic and intent** while improving quality
 
+**CRITICAL: Write the revision in the SAME LANGUAGE as the original essay** (French essay → French revision, English essay → English revision, etc.).
+
 Write the complete revised essay now. Output only the final revised essay, without any meta-commentary or explanations."""
         
         try:

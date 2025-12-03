@@ -48,7 +48,7 @@ async def test_reflection_workflow_real_execution(check_openai_key):
     matches = sum(1 for kw in topic_keywords if kw in draft_lower)
     assert matches >= 2, f"Draft not relevant to topic (only {matches}/4 keywords found)"
     
-    print(f"\n✅ Reflection Workflow Results:")
+    print(f"\nReflection Workflow Results:")
     print(f"Draft length: {len(result['draft'])} chars")
     print(f"Reflection length: {len(result['reflection'])} chars")
     print(f"Revised length: {len(result['revised'])} chars")
@@ -79,7 +79,7 @@ async def test_tool_research_workflow_real_execution(check_openai_key):
     report_lower = report.lower()
     assert "quantum" in report_lower, "Research doesn't mention quantum"
     
-    print(f"\n✅ Tool Research Results:")
+    print(f"\nTool Research Results:")
     print(f"Report length: {len(report)} chars")
     print(f"First 200 chars: {report[:200]}...")
 
@@ -116,7 +116,7 @@ async def test_multi_agent_workflow_real_execution(check_openai_key):
     # Final report validation
     assert len(result["final_report"]) > 200, "Final report too short"
     
-    print(f"\n✅ Multi-Agent Results:")
+    print(f"\nMulti-Agent Results:")
     print(f"Plan steps: {len(result['plan'])}")
     print(f"Execution history: {len(result['history'])} steps")
     print(f"Final report length: {len(result['final_report'])} chars")
@@ -145,7 +145,7 @@ async def test_cache_workflow_semantic_matching(check_openai_key):
     assert cached is not None, "Similar query should hit cache"
     assert cached["draft"] == result1["draft"], "Cached content should match"
     
-    print(f"\n✅ Cache semantic matching works!")
+    print(f"\nCache semantic matching works!")
     print(f"Original: '{topic1}'")
     print(f"Similar: '{topic2}'")
     print(f"Cache hit: YES")
@@ -175,7 +175,7 @@ async def test_workflow_quality_comparative():
     assert len(r2["research_report"]) > 150
     assert len(r3["final_report"]) > 150
     
-    print(f"\n✅ Comparative Quality Test:")
+    print(f"\nComparative Quality Test:")
     print(f"Reflection output: {len(r1['revised'])} chars")
     print(f"Research output: {len(r2['research_report'])} chars")
     print(f"Multi-Agent output: {len(r3['final_report'])} chars")

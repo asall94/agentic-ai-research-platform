@@ -49,6 +49,8 @@ Please analyze this essay critically and provide feedback addressing the followi
    - What are the essay's main strengths?
    - What are the most important areas for improvement?
 
+**IMPORTANT: Provide your feedback in the SAME LANGUAGE as the essay** (if essay is in French, respond in French; if in English, respond in English, etc.).
+
 Provide your feedback in paragraph form, being critical but constructive. Focus on specific issues and suggest concrete improvements."""
         
         try:

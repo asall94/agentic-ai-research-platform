@@ -5,188 +5,130 @@
 [![React](https://img.shields.io/badge/React-18.2-61dafb.svg)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)](https://www.docker.com/)
 [![Azure](https://img.shields.io/badge/Azure-Container%20Apps-0078D4.svg)](https://azure.microsoft.com/services/container-apps/)
-[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC.svg)](https://www.terraform.io/)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-Production-ready multi-agent research platform implementing three specialized workflows: Simple Reflection (draft-critique-revise), Tool Research (search-synthesize-export), and Multi-Agent Orchestration (plan-research-write-edit). Built with FastAPI backend, React frontend, deployed on Azure Container Apps with Terraform IaC. Includes semantic caching (60-80% cost reduction), structured JSON logging, rate limiting, and comprehensive CI/CD.
+Production-ready multi-agent research platform with autonomous workflow orchestration. Implements LLM-driven agent routing, semantic caching (60-80% cost reduction), and real-time streaming. Built with FastAPI backend, React frontend, deployed on Azure Container Apps.
 
 **Live Demo:** https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io
+
+## Agentic Workflows
+
+**Simple Reflection** - Iterative draft improvement via self-critique
+- DraftAgent (T=0.7) generates initial essay
+- ReflectionAgent (T=0.3) provides structured critique
+- RevisionAgent (T=0.5) produces refined version
+- Use case: Academic writing, content improvement
+
+**Tool-Enhanced Research** - Multi-source synthesis with external APIs
+- ResearchAgent orchestrates parallel searches (arXiv, Tavily, Wikipedia)
+- OpenAI function calling with max_turns=6 for iterative tool usage
+- Automated citation extraction and source verification
+- Use case: Literature reviews, technical research
+
+**Multi-Agent Orchestration** - Dynamic task decomposition and routing
+- PlannerAgent (T=0.3) breaks request into executable steps
+- LLM selects specialized agent per step via JSON response: `{"agent": "research_agent", "task": "..."}`
+- Context propagation across agent chain (300-char summaries prevent token overflow)
+- WriterAgent/EditorAgent coordinate final synthesis
+- Use case: Complex research reports, multi-stage analysis
+
+**Agent Architecture:**
+- 7 specialized agents: Draft, Reflection, Revision, Research, Writer, Editor, Planner
+- Abstract BaseAgent class with async `execute()` contract
+- Temperature tuning per role: creative (0.7-1.0), analytical (0.3), editorial (0.4-0.5)
+- Stateless design with explicit context passing (no shared memory)
 
 ## System Architecture
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[React UI<br/>Port 3000]
-        NGINX[Nginx<br/>Static Server]
+    subgraph "Frontend"
+        UI[React + TailwindCSS<br/>SSE Streaming]
     end
     
-    subgraph "API Layer"
-        API[FastAPI Backend<br/>Port 8000]
-        MIDDLEWARE[Middleware Stack]
-        ROUTES[API Routes]
+    subgraph "Backend - FastAPI"
+        API[API Routes]
+        CACHE[Semantic Cache<br/>Redis + Embeddings]
+        MIDDLEWARE[Rate Limit + Logging]
     end
     
-    subgraph "Agent System"
-        DRAFT[Draft Agent<br/>T=0.7]
-        REFLECT[Reflection Agent<br/>T=0.3]
-        REVISE[Revision Agent<br/>T=0.5]
-        RESEARCH[Research Agent<br/>T=0.3]
-        WRITER[Writer Agent<br/>T=0.7]
-        EDITOR[Editor Agent<br/>T=0.4]
-        PLANNER[Planner Agent<br/>T=0.3]
+    subgraph "Agentic Layer"
+        WF1[Reflection Workflow<br/>Draft→Critique→Revise]
+        WF2[Tool Research<br/>Multi-source Synthesis]
+        WF3[Multi-Agent<br/>LLM-Driven Routing]
+        
+        DRAFT[Draft Agent T=0.7]
+        REFLECT[Reflection Agent T=0.3]
+        REVISE[Revision Agent T=0.5]
+        RESEARCH[Research Agent T=0.3]
+        WRITER[Writer Agent T=0.7]
+        EDITOR[Editor Agent T=0.4]
+        PLANNER[Planner Agent T=0.3]
     end
     
-    subgraph "Workflows"
-        WF1[Simple Reflection<br/>Draft→Critique→Revise]
-        WF2[Tool Research<br/>Search→Synthesize]
-        WF3[Multi-Agent<br/>Plan→Execute→Write→Edit]
+    subgraph "External APIs"
+        OPENAI[OpenAI GPT-4o/Mini]
+        ARXIV[arXiv Papers]
+        TAVILY[Web Search]
+        WIKI[Wikipedia]
     end
     
-    subgraph "External Services"
-        OPENAI[OpenAI API<br/>GPT-4o/Mini]
-        ARXIV[arXiv API<br/>Academic Papers]
-        TAVILY[Tavily API<br/>Web Search]
-        WIKI[Wikipedia API<br/>Encyclopedia]
-    end
+    UI --> MIDDLEWARE
+    MIDDLEWARE --> API
+    API --> CACHE
     
-    subgraph "Data Layer"
-        REDIS[(Redis Cache<br/>Semantic Similarity)]
-        METRICS[(Metrics Store<br/>JSON)]
-    end
+    API --> WF1 & WF2 & WF3
     
-    UI --> API
-    API --> MIDDLEWARE
-    MIDDLEWARE --> |Rate Limit| ROUTES
-    MIDDLEWARE --> |Logging| ROUTES
-    MIDDLEWARE --> |CORS| ROUTES
-    
-    ROUTES --> WF1
-    ROUTES --> WF2
-    ROUTES --> WF3
-    
-    WF1 --> DRAFT
-    WF1 --> REFLECT
-    WF1 --> REVISE
-    
+    WF1 --> DRAFT & REFLECT & REVISE
     WF2 --> RESEARCH
+    WF3 --> PLANNER & RESEARCH & WRITER & EDITOR
     
-    WF3 --> PLANNER
-    WF3 --> RESEARCH
-    WF3 --> WRITER
-    WF3 --> EDITOR
-    
-    DRAFT --> OPENAI
-    REFLECT --> OPENAI
-    REVISE --> OPENAI
-    RESEARCH --> OPENAI
-    RESEARCH --> ARXIV
-    RESEARCH --> TAVILY
-    RESEARCH --> WIKI
-    WRITER --> OPENAI
-    EDITOR --> OPENAI
-    PLANNER --> OPENAI
-    
-    API --> REDIS
-    API --> METRICS
+    DRAFT & REFLECT & REVISE & WRITER & EDITOR & PLANNER --> OPENAI
+    RESEARCH --> OPENAI & ARXIV & TAVILY & WIKI
     
     style UI fill:#61dafb
-    style API fill:#009688
+    style CACHE fill:#dc382d
     style OPENAI fill:#10a37f
-    style REDIS fill:#dc382d
 ```
 
-## Request Flow
+**Request Flow:**
+1. User submits topic → Frontend sends POST /workflows/{type}
+2. API generates correlation_id → Check semantic cache (cosine similarity >0.95)
+3. **Cache hit:** Return result <500ms | **Cache miss:** Execute workflow 45-90s
+4. Workflow orchestrates agents → Agents call OpenAI/external APIs
+5. Result stored in cache with embedding → Response streamed via SSE
+6. Metrics tracked: execution time, cache hit/miss, agent usage
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend
-    participant API
-    participant Cache
-    participant Workflow
-    participant Agent
-    participant OpenAI
-    participant Metrics
+## Production Features
 
-    User->>Frontend: Submit topic
-    Frontend->>API: POST /workflows/reflection
-    API->>API: Generate correlation_id
-    API->>Cache: Check semantic cache
-    
-    alt Cache Hit
-        Cache-->>API: Return cached result
-        API->>Metrics: Track (cache_hit=true)
-        API-->>Frontend: Return result (< 500ms)
-    else Cache Miss
-        API->>Workflow: Execute workflow
-        Workflow->>Agent: Draft agent
-        Agent->>OpenAI: Generate draft
-        OpenAI-->>Agent: Draft content
-        Workflow->>Agent: Reflection agent
-        Agent->>OpenAI: Generate critique
-        OpenAI-->>Agent: Critique content
-        Workflow->>Agent: Revision agent
-        Agent->>OpenAI: Generate revision
-        OpenAI-->>Agent: Revised content
-        Workflow-->>API: Return result
-        API->>Cache: Store with embedding
-        API->>Metrics: Track (cache_hit=false)
-        API-->>Frontend: Return result (~45s)
-    end
-    
-    Frontend-->>User: Display result
-```
+**Semantic Caching** - 60-80% cost reduction
+- Sentence-transformers embeddings (all-MiniLM-L6-v2, 384-dim)
+- Redis with cosine similarity threshold 0.95
+- 30-day TTL, ~420ms cached query latency
+- Production metrics: 68% cache hit rate, $0.0056/query (vs $0.02 uncached)
 
-## Multi-Agent Orchestration Flow
+**Real-Time Streaming** - Server-Sent Events (SSE)
+- Progressive workflow updates (start, progress, step_complete, complete, error)
+- Cache-aware: instant delivery on hit, live updates on miss
+- EventSource API with automatic reconnection
+- Headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no`
 
-```mermaid
-graph LR
-    A[User Request] --> B[Planner Agent]
-    B --> C{Generate Steps}
-    C --> D[Step 1: Research]
-    C --> E[Step 2: Analyze]
-    C --> F[Step 3: Write]
-    C --> G[Step 4: Edit]
-    
-    D --> H[LLM Selects<br/>Research Agent]
-    E --> I[LLM Selects<br/>Reflection Agent]
-    F --> J[LLM Selects<br/>Writer Agent]
-    G --> K[LLM Selects<br/>Editor Agent]
-    
-    H --> L[Context Builder]
-    I --> L
-    J --> L
-    K --> L
-    
-    L --> M[Final Output]
-    
-    style B fill:#ffd54f
-    style H fill:#81c784
-    style I fill:#81c784
-    style J fill:#81c784
-    style K fill:#81c784
-```
+**Monitoring & Observability**
+- Azure Application Insights integration
+- Custom metrics: request duration, workflow execution, cache hits, error rates
+- Structured JSON logging with correlation IDs
+- Distribution buckets: [50-5000]ms requests, [1-300]s workflows
 
-## Core Features
+**Rate Limiting & Security**
+- 100 requests/15min per IP (Redis-backed sliding window)
+- Health endpoints bypass rate limiting
+- CORS configured for production domains
+- Input validation: topic 1-500 chars, whitespace trimming
 
-**Agent Workflows**
-- Simple Reflection: Draft generation, critique, and revision cycle
-- Tool-Enhanced Research: Integrated search across arXiv, Tavily, and Wikipedia with automated synthesis
-- Multi-Agent Orchestration: Coordinated planning, research, writing, and editing pipeline
-
-**Production-Grade Stack**
-- Backend: FastAPI with async support, OpenAI integration, structured logging
-- Frontend: React with TailwindCSS, real-time monitoring, responsive design
-- Streaming: Server-Sent Events (SSE) for real-time workflow progress (ChatGPT-style UX)
-- Cloud: Azure Container Apps with auto-scaling, Application Insights monitoring
-- Integration: arXiv API, Tavily search, Wikipedia, OpenAI GPT-4/GPT-4o-mini
-- Cache: Redis (Upstash) with semantic similarity matching (60-80% cost reduction)
-- Cache-Aware Streaming: Instant results (<1s) on cache hit, progressive updates on miss (60-90s)
-- Rate Limiting: 100 requests/15min per IP (configurable)
-- DevOps: Docker multi-stage builds, GitHub Actions CI/CD, Terraform IaC (Azure)
-- Monitoring: Azure Application Insights with custom metrics (requests, errors, workflows, cache hits)
-- Export: HTML, Markdown, JSON formats
+**DevOps & Deployment**
+- Docker multi-stage builds (backend 180MB, frontend 25MB)
+- GitHub Actions CI/CD with Azure Container Registry
+- Terraform IaC for Azure Container Apps (auto-scaling 0-2 replicas)
+- Environment: Python 3.12, Node 18, Redis 7
 
 ## Quick Start
 

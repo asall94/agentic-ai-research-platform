@@ -26,6 +26,7 @@ Your essay should:
 - Conclude with a summary and final thoughts
 - Be approximately 500-700 words
 - Use formal academic tone
+- **Respond in the same language as the topic** (if topic is in French, respond in French; if in English, respond in English, etc.)
 
 Write the complete essay now."""
         

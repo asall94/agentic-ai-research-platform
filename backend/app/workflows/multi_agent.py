@@ -79,15 +79,49 @@ Your next task is:
                 "output": output
             })
         
-        # Extract final report
-        final_report = history[-1]["output"] if history else ""
+        # Step 3: Final synthesis - Let WriterAgent produce polished final version
+        logger.info("Final step: Synthesizing final report from all agent outputs...")
+        
+        synthesis_task = f"""You are the WriterAgent responsible for producing the final polished report.
+
+Based on all the work done by the team below, produce a comprehensive, well-structured final report on the topic: "{topic}"
+
+Team work history:
+{self._build_context(history)}
+
+**Your task:**
+- Synthesize all research findings into a coherent narrative
+- Incorporate editorial feedback and improvements suggested by the editor
+- Structure the content with clear sections and flow
+- Include all relevant citations and sources
+- Produce publication-ready content in the SAME LANGUAGE as the original topic
+
+**IMPORTANT:** Return ONLY the final polished report text, NOT meta-commentary or explanations about what you did."""
+
+        final_report = await self.agents["writer_agent"].execute(synthesis_task)
+        
+        # Add synthesis step to history
+        history.append({
+            "step": "Final synthesis and polishing",
+            "agent": "writer_agent",
+            "output": final_report
+        })
+        
+        # Extract sources ONLY from final output (retained info only)
+        import re
+        sources = []
+        links = re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_report)
+        for title, url in links:
+            if url.startswith('http'):
+                sources.append({"title": title, "url": url})
         
         logger.info("Multi-agent workflow completed")
         
         return {
             "plan": plan_steps,
             "history": history,
-            "final_report": final_report
+            "final_report": final_report,
+            "sources": sources[:10]  # Limit to 10 sources cited in final output
         }
     
     async def _decide_agent(self, step: str) -> dict:

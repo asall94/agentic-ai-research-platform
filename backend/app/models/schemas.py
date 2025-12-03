@@ -1,13 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 
 
 class WorkflowRequest(BaseModel):
     """Base request for workflow execution"""
-    topic: str = Field(..., description="Research topic or prompt")
+    topic: str = Field(..., min_length=1, max_length=500, description="Research topic or prompt")
     model: Optional[str] = Field(None, description="Override default model")
     temperature: Optional[float] = Field(None, ge=0.0, le=2.0, description="Temperature for generation")
+    
+    @field_validator('topic')
+    @classmethod
+    def validate_topic(cls, v: str) -> str:
+        """Strip whitespace and validate topic is not empty"""
+        v = v.strip()
+        if not v:
+            raise ValueError("Topic cannot be empty or only whitespace")
+        return v
 
 
 class ReflectionWorkflowRequest(WorkflowRequest):

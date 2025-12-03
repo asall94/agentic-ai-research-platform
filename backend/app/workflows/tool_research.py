@@ -51,7 +51,11 @@ class ToolResearchWorkflow:
         # Step 1: Research with tools
         research_agent = ResearchAgent(model=self.model)
         logger.info("Step 1: Conducting research with tools...")
-        research_report = await research_agent.execute(topic, tools=self.tools)
+        research_report = await research_agent.execute(
+            topic, 
+            tools=self.tools, 
+            tool_func_mapping=self.tool_func_mapping
+        )
         
         # Step 2: Reflection and rewrite
         logger.info("Step 2: Reflecting on research...")
@@ -68,12 +72,21 @@ class ToolResearchWorkflow:
         
         logger.info("Tool research workflow completed")
         
+        # Extract sources ONLY from final revised report (retained info only)
+        import re
+        sources = []
+        final_output = reflection_result.get("revised_report") or research_report
+        links = re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_output)
+        for title, url in links:
+            if url.startswith('http'):
+                sources.append({"title": title, "url": url})
+        
         return {
             "research_report": research_report,
             "reflection": reflection_result.get("reflection"),
             "revised_report": reflection_result.get("revised_report"),
             "html_output": html_output,
-            "sources": []  # TODO: Extract from research
+            "sources": sources[:10]  # Limit to 10 sources cited in final output
         }
     
     async def _reflect_and_rewrite(self, report: str) -> dict:
