@@ -48,59 +48,57 @@ def pytest_collection_modifyitems(config, items):
     
     is_e2e = config.getoption("--e2e", default=False)
     is_deepeval = config.getoption("--deepeval", default=False)
-    is_unit_test = not (is_e2e or is_deepeval)
     
     for item in items:
         if "e2e" in item.keywords and not is_e2e:
             item.add_marker(skip_e2e)
         if "deepeval" in item.keywords and not is_deepeval:
             item.add_marker(skip_deepeval)
+
+
+@pytest.fixture(autouse=True)
+def mock_openai_client(request):
+    """Fixture to mock OpenAI client for all unit tests (not E2E or DeepEval)"""
+    # Skip mocking for E2E and DeepEval tests
+    if 'e2e' in request.keywords or 'deepeval' in request.keywords:
+        yield None
+        return
     
-    # Mock OpenAI only for unit tests
-    if is_unit_test:
-        # Mock OpenAI globally before any imports
-        mock_openai_module = MagicMock()
-        mock_openai_module.__spec__ = MagicMock()
-        mock_openai_module.__spec__.name = 'openai'
-        
-        # Create shared mock response that tests can modify
-        mock_response = MagicMock()
-        mock_message = MagicMock()
-        mock_message.content = '{"agent": "research_agent", "task": "Execute task"}'
-        mock_choice = MagicMock()
-        mock_choice.message = mock_message
-        mock_response.choices = [mock_choice]
-        
-        # Create mock client instance
-        mock_client_instance = MagicMock()
-        mock_client_instance.chat.completions.create = MagicMock(return_value=mock_response)
-        
-        # Store response reference for fixture access
-        mock_openai_module._test_response = mock_response
-        mock_openai_module.OpenAI.return_value = mock_client_instance
-        sys.modules['openai'] = mock_openai_module
-        
-        # Mock opencensus to avoid Application Insights dependency in tests
-        mock_opencensus = MagicMock()
-        sys.modules['opencensus'] = mock_opencensus
-        sys.modules['opencensus.ext'] = MagicMock()
-        sys.modules['opencensus.ext.azure'] = MagicMock()
-        sys.modules['opencensus.ext.azure.log_exporter'] = MagicMock()
-        sys.modules['opencensus.ext.azure.metrics_exporter'] = MagicMock()
-        sys.modules['opencensus.ext.fastapi'] = MagicMock()
-        sys.modules['opencensus.stats'] = MagicMock()
-        sys.modules['opencensus.stats.aggregation'] = MagicMock()
-        sys.modules['opencensus.stats.measure'] = MagicMock()
-        sys.modules['opencensus.stats.stats'] = MagicMock()
-        sys.modules['opencensus.stats.view'] = MagicMock()
-        sys.modules['opencensus.tags'] = MagicMock()
-        sys.modules['opencensus.tags.tag_map'] = MagicMock()
-
-
-@pytest.fixture
-def mock_openai_client():
-    """Fixture to access the mocked OpenAI client (only for unit tests)"""
-    if 'openai' in sys.modules:
-        # Return the entire mock module so tests can access create()
-        return sys.modules['openai']
-    return None
+    # Patch OpenAI in all agent modules
+    patches = [
+        patch('app.agents.draft_agent.OpenAI'),
+        patch('app.agents.reflection_agent.OpenAI'),
+        patch('app.agents.revision_agent.OpenAI'),
+        patch('app.agents.research_agent.OpenAI'),
+        patch('app.agents.writer_agent.OpenAI'),
+        patch('app.agents.editor_agent.OpenAI'),
+        patch('app.agents.planner_agent.OpenAI'),
+        patch('app.workflows.multi_agent.OpenAI'),
+    ]
+    
+    # Create mock response
+    mock_message = Mock()
+    mock_message.content = "Test response"
+    mock_choice = Mock()
+    mock_choice.message = mock_message
+    mock_response = Mock()
+    mock_response.choices = [mock_choice]
+    
+    # Configure mock client
+    mock_client_instance = Mock()
+    mock_client_instance.chat.completions.create.return_value = mock_response
+    
+    # Start all patches
+    mocks = []
+    for p in patches:
+        mock_openai = p.start()
+        mock_openai.return_value = mock_client_instance
+        mock_openai._test_response = mock_response
+        mock_openai._test_client = mock_client_instance
+        mocks.append(mock_openai)
+    
+    yield mocks[0]  # Return first mock for tests to access
+    
+    # Stop all patches
+    for p in patches:
+        p.stop()

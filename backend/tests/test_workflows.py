@@ -161,8 +161,10 @@ class TestMultiAgentWorkflow:
             
             result = await workflow.execute("Topic")
             
-            # Should only execute 2 steps even though planner returned 4
-            assert len(result.get("history", [])) <= 2
+            # Should only execute 2 steps + 1 final synthesis (max_steps=2 limits plan steps, not synthesis)
+            # History contains: Step1, Step2, Final synthesis = 3 total
+            assert len(result.get("history", [])) == 3
+            assert len(result.get("plan", [])) == 2  # Plan itself is limited to 2 steps
 
 
 class TestWorkflowErrorHandling:
