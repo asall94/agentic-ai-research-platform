@@ -7,10 +7,15 @@ from unittest.mock import Mock, patch, MagicMock
 # Add backend to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# For E2E and DeepEval tests: use real env or skip if missing
-# For unit tests: mock everything
+
+def pytest_addoption(parser):
+    """Add custom pytest options"""
+    parser.addoption("--e2e", action="store_true", help="Run E2E tests with real API calls")
+    parser.addoption("--deepeval", action="store_true", help="Run DeepEval quality tests")
+
+
 def pytest_configure(config):
-    """Check if running E2E or DeepEval tests"""
+    """Configure test environment and register markers"""
     is_e2e = config.getoption("--e2e", default=False)
     is_deepeval = config.getoption("--deepeval", default=False)
     
@@ -24,9 +29,9 @@ def pytest_configure(config):
             except:
                 pass
     else:
-        # Unit tests - use mocks
-        os.environ["OPENAI_API_KEY"] = "test-key"
-        os.environ["TAVILY_API_KEY"] = "test-key"
+        # Unit tests - use mocks, override any existing API keys
+        os.environ["OPENAI_API_KEY"] = "test-mock-key-for-unit-tests"
+        os.environ["TAVILY_API_KEY"] = "test-mock-key-for-unit-tests"
         
     os.environ["CACHE_ENABLED"] = "False"
     os.environ["LOG_LEVEL"] = "ERROR"
@@ -36,7 +41,6 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "deepeval: DeepEval quality assessment tests")
 
 
-# Only mock OpenAI for unit tests (not E2E/DeepEval)
 def pytest_collection_modifyitems(config, items):
     """Skip tests and setup mocks based on markers"""
     skip_e2e = pytest.mark.skip(reason="Use --e2e to run E2E tests")
@@ -100,27 +104,3 @@ def mock_openai_client():
         # Return the entire mock module so tests can access create()
         return sys.modules['openai']
     return None
-
-
-def pytest_addoption(parser):
-    """Add custom pytest options"""
-    parser.addoption("--e2e", action="store_true", help="Run E2E tests with real API calls")
-    parser.addoption("--deepeval", action="store_true", help="Run DeepEval quality tests")
-
-
-def pytest_configure(config):
-    """Register custom markers"""
-    config.addinivalue_line("markers", "e2e: End-to-end tests with real API calls")
-    config.addinivalue_line("markers", "deepeval: DeepEval quality assessment tests")
-
-
-def pytest_collection_modifyitems(config, items):
-    """Skip tests based on command line options"""
-    skip_e2e = pytest.mark.skip(reason="Use --e2e to run E2E tests")
-    skip_deepeval = pytest.mark.skip(reason="Use --deepeval to run DeepEval tests")
-    
-    for item in items:
-        if "e2e" in item.keywords and not config.getoption("--e2e"):
-            item.add_marker(skip_e2e)
-        if "deepeval" in item.keywords and not config.getoption("--deepeval"):
-            item.add_marker(skip_deepeval)
