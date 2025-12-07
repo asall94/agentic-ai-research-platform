@@ -135,11 +135,11 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "CORS_ORIGINS"
-        value = "https://${azurerm_container_app.frontend.ingress[0].fqdn},http://localhost:3000,http://localhost:3001"
+        value = "https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io,http://localhost:3000,http://localhost:3001"
       }
     }
 
-    min_replicas = 0
+    min_replicas = 1
     max_replicas = 2
   }
 

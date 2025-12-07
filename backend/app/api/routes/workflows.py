@@ -19,6 +19,7 @@ from fastapi.responses import StreamingResponse
 from datetime import datetime
 import time
 import uuid
+import json
 
 router = APIRouter()
 logger = StructuredLogger(__name__)
