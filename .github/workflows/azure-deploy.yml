@@ -122,6 +122,10 @@ jobs:
     
     - name: Update Terraform image tags
       working-directory: ./terraform
+      env:
+        TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+        TF_VAR_tavily_api_key: ${{ secrets.TAVILY_API_KEY }}
+        TF_VAR_redis_url: ${{ secrets.REDIS_URL }}
       run: |
         # Update backend image in Terraform variable
         export TF_VAR_backend_image="${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
