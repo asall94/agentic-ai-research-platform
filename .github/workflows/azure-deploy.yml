@@ -115,29 +115,57 @@ jobs:
         cache-from: type=registry,ref=${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
         cache-to: type=registry,ref=${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
     
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.6.0
-    
-    - name: Update Terraform image tags
-      working-directory: ./terraform
-      env:
-        TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-        TF_VAR_tavily_api_key: ${{ secrets.TAVILY_API_KEY }}
-        TF_VAR_redis_url: ${{ secrets.REDIS_URL }}
+    - name: Get Application Insights connection string
+      id: appinsights
       run: |
-        # Update backend image in Terraform variable
-        export TF_VAR_backend_image="${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
-        export TF_VAR_frontend_image="${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}"
+        CONN_STRING=$(az monitor app-insights component show \
+          --app appi-agentic-ai \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query connectionString -o tsv)
+        echo "connection_string=${CONN_STRING}" >> $GITHUB_OUTPUT
+    
+    - name: Update backend Container App
+      run: |
+        az containerapp registry set \
+          --name ${{ env.BACKEND_APP }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --server ${{ env.AZURE_REGISTRY }} \
+          --username $(az acr credential show --name acragenticai5fxa66 --query username -o tsv) \
+          --password $(az acr credential show --name acragenticai5fxa66 --query "passwords[0].value" -o tsv)
         
-        # Initialize Terraform
-        terraform init
+        az containerapp update \
+          --name ${{ env.BACKEND_APP }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --image ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
+          --min-replicas 1 \
+          --set-env-vars \
+            "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
+            "TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}" \
+            "REDIS_URL=${{ secrets.REDIS_URL }}" \
+            "CACHE_ENABLED=True" \
+            "LOG_LEVEL=INFO" \
+            "RATE_LIMIT_REQUESTS=100" \
+            "RATE_LIMIT_WINDOW_SECONDS=900" \
+            "APP_NAME=Agentic AI Research Platform" \
+            "DEBUG=False" \
+            "PORT=8000" \
+            "APPLICATIONINSIGHTS_CONNECTION_STRING=${{ steps.appinsights.outputs.connection_string }}" \
+            "APPINSIGHTS_ENABLED=True" \
+            "CORS_ORIGINS=https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io,http://localhost:3000,http://localhost:3001"
+    
+    - name: Update frontend Container App
+      run: |
+        az containerapp registry set \
+          --name ${{ env.FRONTEND_APP }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --server ${{ env.AZURE_REGISTRY }} \
+          --username $(az acr credential show --name acragenticai5fxa66 --query username -o tsv) \
+          --password $(az acr credential show --name acragenticai5fxa66 --query "passwords[0].value" -o tsv)
         
-        # Apply with new image tags (preserves all env vars)
-        terraform apply -auto-approve \
-          -var="backend_image=${TF_VAR_backend_image}" \
-          -var="frontend_image=${TF_VAR_frontend_image}"
+        az containerapp update \
+          --name ${{ env.FRONTEND_APP }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --image ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
     
     - name: Health check backend
       continue-on-error: true
