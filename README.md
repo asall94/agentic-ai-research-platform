@@ -34,7 +34,7 @@ Production-ready multi-agent research platform with autonomous workflow orchestr
 **Agent Architecture:**
 - 7 specialized agents: Draft, Reflection, Revision, Research, Writer, Editor, Planner
 - Abstract BaseAgent class with async `execute()` contract
-- Temperature tuning per role: creative (0.7-1.0), analytical (0.3), editorial (0.4-0.5)
+- Temperature tuning per role: creative (0.7), analytical (0.3), editorial (0.5)
 - Stateless design with explicit context passing (no shared memory)
 
 ## System Architecture
