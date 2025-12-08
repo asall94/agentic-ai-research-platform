@@ -69,7 +69,7 @@ resource "azurerm_container_app" "backend" {
   template {
     container {
       name   = "backend"
-      image  = "docker.io/library/python:3.11-slim"  # Placeholder, will be replaced by CI/CD
+      image  = var.backend_image
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -165,7 +165,7 @@ resource "azurerm_container_app" "frontend" {
   template {
     container {
       name   = "frontend"
-      image  = "docker.io/library/nginx:alpine"  # Placeholder
+      image  = var.frontend_image
       cpu    = 0.25
       memory = "0.5Gi"
 

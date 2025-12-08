@@ -47,3 +47,15 @@ variable "environment" {
   type        = string
   default     = "production"
 }
+
+variable "backend_image" {
+  description = "Backend Docker image (set by CI/CD)"
+  type        = string
+  default     = "docker.io/library/python:3.11-slim"
+}
+
+variable "frontend_image" {
+  description = "Frontend Docker image (set by CI/CD)"
+  type        = string
+  default     = "docker.io/library/nginx:alpine"
+}

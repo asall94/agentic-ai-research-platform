@@ -115,33 +115,25 @@ jobs:
         cache-from: type=registry,ref=${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache
         cache-to: type=registry,ref=${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
     
-    - name: Update backend Container App
-      run: |
-        az containerapp registry set \
-          --name ${{ env.BACKEND_APP }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --server ${{ env.AZURE_REGISTRY }} \
-          --username $(az acr credential show --name acragenticai5fxa66 --query username -o tsv) \
-          --password $(az acr credential show --name acragenticai5fxa66 --query "passwords[0].value" -o tsv)
-        
-        az containerapp update \
-          --name ${{ env.BACKEND_APP }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --image ${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
     
-    - name: Update frontend Container App
+    - name: Update Terraform image tags
+      working-directory: ./terraform
       run: |
-        az containerapp registry set \
-          --name ${{ env.FRONTEND_APP }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --server ${{ env.AZURE_REGISTRY }} \
-          --username $(az acr credential show --name acragenticai5fxa66 --query username -o tsv) \
-          --password $(az acr credential show --name acragenticai5fxa66 --query "passwords[0].value" -o tsv)
+        # Update backend image in Terraform variable
+        export TF_VAR_backend_image="${{ env.AZURE_REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}"
+        export TF_VAR_frontend_image="${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}"
         
-        az containerapp update \
-          --name ${{ env.FRONTEND_APP }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --image ${{ env.AZURE_REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+        # Initialize Terraform
+        terraform init
+        
+        # Apply with new image tags (preserves all env vars)
+        terraform apply -auto-approve \
+          -var="backend_image=${TF_VAR_backend_image}" \
+          -var="frontend_image=${TF_VAR_frontend_image}"
     
     - name: Health check backend
       continue-on-error: true
