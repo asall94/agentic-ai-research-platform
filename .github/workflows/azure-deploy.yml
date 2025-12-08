@@ -119,7 +119,7 @@ jobs:
       id: appinsights
       run: |
         CONN_STRING=$(az monitor app-insights component show \
-          --app appi-agentic-ai \
+          --app appi-agentic-ai-research \
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --query connectionString -o tsv)
         echo "connection_string=${CONN_STRING}" >> $GITHUB_OUTPUT
