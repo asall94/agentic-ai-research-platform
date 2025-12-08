@@ -12,7 +12,8 @@ class BaseAgent(ABC):
         # Remove 'openai:' prefix if present
         self.model = model.replace("openai:", "") if model else model
         self.temperature = temperature
-
+        self.logger = logging.getLogger(self.__class__.__name__)
+    
     @abstractmethod
     async def execute(self, task: str, **kwargs) -> str:
         """Execute the agent's task"""
