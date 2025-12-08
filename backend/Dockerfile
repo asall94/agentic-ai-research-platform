@@ -17,15 +17,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# Create non-root user first
+RUN useradd -m -u 1000 appuser
+
+# Copy Python dependencies from builder to appuser home
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Copy application code
-COPY . .
+COPY --chown=appuser:appuser . .
 
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Switch to non-root user
 USER appuser
 
 # Expose port
