@@ -4,6 +4,12 @@ variable "azure_subscription_id" {
   default     = "9b002981-82da-4e3f-b671-dac15978db4c"
 }
 
+variable "azure_tenant_id" {
+  description = "Azure tenant ID"
+  type        = string
+  default     = "e334cc21-750b-4bab-87e4-f1029341ad09"
+}
+
 variable "resource_group_name" {
   description = "Azure resource group name"
   type        = string
