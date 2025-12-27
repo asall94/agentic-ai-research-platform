@@ -21,7 +21,8 @@ class CacheService:
             try:
                 self.redis_client = redis.from_url(
                     settings.REDIS_URL,
-                    decode_responses=False
+                    decode_responses=False,
+                    ssl_cert_reqs=None  # Disable SSL cert verification for Upstash
                 )
                 self.redis_client.ping()
                 logger.info(f"Redis connected: {settings.REDIS_URL}")
@@ -30,8 +31,9 @@ class CacheService:
                 from sentence_transformers import SentenceTransformer
                 self.model = SentenceTransformer(settings.EMBEDDING_MODEL)
                 logger.info(f"Embedding model loaded: {settings.EMBEDDING_MODEL}")
+                logger.info("CACHE FULLY INITIALIZED AND ENABLED")
             except Exception as e:
-                logger.warning(f"Cache initialization failed: {e}. Running without cache.")
+                logger.error(f"Cache initialization failed: {e}. Running without cache.", exc_info=True)
                 self.enabled = False
     
     def _generate_embedding(self, text: str) -> np.ndarray:
