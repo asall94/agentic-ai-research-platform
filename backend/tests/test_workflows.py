@@ -1,75 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from app.workflows.simple_reflection import SimpleReflectionWorkflow
 from app.workflows.tool_research import ToolResearchWorkflow
 from app.workflows.multi_agent import MultiAgentWorkflow
-
-
-class TestSimpleReflectionWorkflow:
-    """Test suite for Simple Reflection Workflow"""
-    
-    @pytest.mark.asyncio
-    async def test_execute_returns_dict_with_required_keys(self):
-        """Workflow should return dict with draft, reflection, revised"""
-        workflow = SimpleReflectionWorkflow()
-        
-        with patch('app.agents.draft_agent.DraftAgent.execute', new_callable=AsyncMock) as mock_draft, \
-             patch('app.agents.reflection_agent.ReflectionAgent.execute', new_callable=AsyncMock) as mock_reflect, \
-             patch('app.agents.revision_agent.RevisionAgent.execute', new_callable=AsyncMock) as mock_revise:
-            
-            mock_draft.return_value = "Draft content"
-            mock_reflect.return_value = "Critique content"
-            mock_revise.return_value = "Revised content"
-            
-            result = await workflow.execute("AI ethics")
-            
-            assert isinstance(result, dict)
-            assert "draft" in result
-            assert "reflection" in result
-            assert "revised" in result
-            assert result["draft"] == "Draft content"
-            assert result["reflection"] == "Critique content"
-            assert result["revised"] == "Revised content"
-    
-    @pytest.mark.asyncio
-    async def test_execute_calls_agents_in_order(self):
-        """Workflow should call draft -> reflection -> revision in sequence"""
-        workflow = SimpleReflectionWorkflow()
-        
-        call_order = []
-        
-        async def mock_draft_execute(*args, **kwargs):
-            call_order.append("draft")
-            return "Draft"
-        
-        async def mock_reflect_execute(*args, **kwargs):
-            call_order.append("reflection")
-            return "Critique"
-        
-        async def mock_revise_execute(*args, **kwargs):
-            call_order.append("revision")
-            return "Revised"
-        
-        with patch('app.agents.draft_agent.DraftAgent.execute', new=mock_draft_execute), \
-             patch('app.agents.reflection_agent.ReflectionAgent.execute', new=mock_reflect_execute), \
-             patch('app.agents.revision_agent.RevisionAgent.execute', new=mock_revise_execute):
-            
-            await workflow.execute("Test topic")
-            
-            assert call_order == ["draft", "reflection", "revision"]
-    
-    @pytest.mark.asyncio
-    async def test_execute_with_custom_models(self):
-        """Workflow should accept custom model parameters"""
-        workflow = SimpleReflectionWorkflow(
-            draft_model="gpt-4o",
-            reflection_model="gpt-4o-mini",
-            revision_model="gpt-4o"
-        )
-        
-        assert workflow.draft_agent.model == "gpt-4o"
-        assert workflow.reflection_agent.model == "gpt-4o-mini"
-        assert workflow.revision_agent.model == "gpt-4o"
 
 
 class TestToolResearchWorkflow:
@@ -167,18 +99,3 @@ class TestMultiAgentWorkflow:
             assert len(result.get("plan", [])) == 2  # Plan itself is limited to 2 steps
 
 
-class TestWorkflowErrorHandling:
-    """Test error handling in workflows"""
-    
-    @pytest.mark.asyncio
-    async def test_workflow_handles_agent_failure(self):
-        """Workflow should handle agent execution failures gracefully"""
-        workflow = SimpleReflectionWorkflow()
-        
-        with patch('app.agents.draft_agent.DraftAgent.execute', new_callable=AsyncMock) as mock_draft:
-            mock_draft.side_effect = Exception("API error")
-            
-            with pytest.raises(Exception) as exc_info:
-                await workflow.execute("Test topic")
-            
-            assert "API error" in str(exc_info.value)

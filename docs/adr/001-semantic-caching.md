@@ -49,11 +49,6 @@ Implement semantic caching using Redis with sentence embeddings for similarity m
 - 3x storage cost, minimal business value (drafts not reusable)
 - Rejected: Low ROI, final results provide complete value
 
-**5. LangChain built-in caching**
-- Tightly coupled to LangChain framework (project uses direct OpenAI)
-- Less control over similarity thresholds and storage
-- Rejected: Architectural mismatch
-
 ## Consequences
 
 **Positive:**

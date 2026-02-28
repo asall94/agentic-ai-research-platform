@@ -37,60 +37,6 @@ class TestHealthEndpoint:
         assert data["status"] == "healthy"
 
 
-class TestReflectionWorkflowEndpoint:
-    """Test suite for reflection workflow endpoint"""
-    
-    @pytest.mark.asyncio
-    @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    async def test_reflection_workflow_returns_200(self, mock_execute, client):
-        """Reflection workflow should return 200 on success"""
-        mock_execute.return_value = {
-            "draft": "Draft content",
-            "reflection": "Critique",
-            "revised": "Final content"
-        }
-        
-        response = await client.post(
-            "/api/v1/workflows/reflection",
-            json={"topic": "AI ethics"}
-        )
-        
-        assert response.status_code == 200
-    
-    @pytest.mark.asyncio
-    @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    async def test_reflection_workflow_response_structure(self, mock_execute, client):
-        """Reflection workflow should return proper response structure"""
-        mock_execute.return_value = {
-            "draft": "Draft",
-            "reflection": "Critique",
-            "revised": "Final"
-        }
-        
-        response = await client.post(
-            "/api/v1/workflows/reflection",
-            json={"topic": "Test topic"}
-        )
-        
-        data = response.json()
-        assert "workflow_id" in data
-        assert "workflow_type" in data
-        assert "status" in data
-        assert "draft" in data
-        assert "reflection" in data
-        assert "revised" in data
-    
-    @pytest.mark.asyncio
-    async def test_reflection_workflow_requires_topic(self, client):
-        """Reflection workflow should require topic parameter"""
-        response = await client.post(
-            "/api/v1/workflows/reflection",
-            json={}
-        )
-        
-        assert response.status_code == 422  # Validation error
-
-
 class TestRateLimiting:
     """Test suite for rate limiting middleware"""
     
@@ -175,20 +121,4 @@ class TestErrorHandling:
         response = await client.get("/api/v1/nonexistent")
         assert response.status_code == 404
     
-    @pytest.mark.asyncio
-    @patch('app.workflows.simple_reflection.SimpleReflectionWorkflow.execute')
-    async def test_500_on_workflow_failure(self, mock_execute, client):
-        """Workflow failures should return proper error response"""
-        mock_execute.side_effect = Exception("Workflow error")
-        
-        response = await client.post(
-            "/api/v1/workflows/reflection",
-            json={"topic": "Test"}
-        )
-        
-        # Should return error response (500 or 200 with error status)
-        assert response.status_code in [200, 500]
-        
-        if response.status_code == 200:
-            data = response.json()
-            assert data.get("status") == "failed"
+

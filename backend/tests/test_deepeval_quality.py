@@ -8,7 +8,6 @@ from deepeval import assert_test
 from deepeval.metrics import GEval, AnswerRelevancyMetric, FaithfulnessMetric, HallucinationMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
-from app.workflows.simple_reflection import SimpleReflectionWorkflow
 from app.workflows.tool_research import ToolResearchWorkflow
 from app.workflows.multi_agent import MultiAgentWorkflow
 
@@ -33,67 +32,6 @@ depth_metric = GEval(
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
     threshold=0.5
 )
-
-improvement_metric = GEval(
-    name="Revision Improvement",
-    criteria="Evaluate if the revised version addresses critiques and improves upon the draft",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
-    threshold=0.6
-)
-
-
-@pytest.mark.deepeval
-@pytest.mark.asyncio
-async def test_reflection_workflow_coherence(check_api_key):
-    """Test if reflection workflow produces coherent output"""
-    workflow = SimpleReflectionWorkflow()
-    topic = "Should governments regulate cryptocurrency markets?"
-    
-    result = await workflow.execute(topic)
-    
-    test_case = LLMTestCase(
-        input=topic,
-        actual_output=result["revised"]
-    )
-    
-    assert_test(test_case, [coherence_metric])
-
-
-@pytest.mark.deepeval
-@pytest.mark.asyncio
-async def test_reflection_workflow_relevance(check_api_key):
-    """Test answer relevancy to input topic"""
-    workflow = SimpleReflectionWorkflow()
-    topic = "Benefits of remote work for tech companies"
-    
-    result = await workflow.execute(topic)
-    
-    relevancy = AnswerRelevancyMetric(threshold=0.7)
-    
-    test_case = LLMTestCase(
-        input=topic,
-        actual_output=result["revised"]
-    )
-    
-    assert_test(test_case, [relevancy])
-
-
-@pytest.mark.deepeval
-@pytest.mark.asyncio
-async def test_reflection_improves_draft(check_api_key):
-    """Test if revision actually improves based on reflection"""
-    workflow = SimpleReflectionWorkflow()
-    topic = "Impact of social media on mental health"
-    
-    result = await workflow.execute(topic)
-    
-    test_case = LLMTestCase(
-        input=f"Draft: {result['draft']}\nCritique: {result['reflection']}",
-        actual_output=result["revised"]
-    )
-    
-    assert_test(test_case, [improvement_metric])
-
 
 @pytest.mark.deepeval
 @pytest.mark.asyncio
@@ -197,19 +135,16 @@ async def test_comparative_workflow_quality(check_api_key):
     """Compare quality across all three workflows on same topic"""
     topic = "Challenges of space exploration"
     
-    reflection_wf = SimpleReflectionWorkflow()
     research_wf = ToolResearchWorkflow(tools=["wikipedia"])
     multi_wf = MultiAgentWorkflow(max_steps=2)
     
-    r1 = await reflection_wf.execute(topic)
     r2 = await research_wf.execute(topic)
     r3 = await multi_wf.execute(topic)
     
     relevancy = AnswerRelevancyMetric(threshold=0.6)
     
-    # Test all three outputs
+    # Test both workflow outputs
     for name, output in [
-        ("Reflection", r1["revised"]),
         ("Research", r2["research_report"]),
         ("Multi-Agent", r3["final_report"])
     ]:

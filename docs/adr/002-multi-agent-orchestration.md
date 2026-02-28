@@ -46,17 +46,12 @@ async def _decide_agent(self, step: str) -> dict:
 - Faster (no LLM call), deterministic
 - Rejected: Brittle for nuanced tasks ("analyze recent papers" unclear if research or reflection)
 
-**3. LangGraph orchestration framework**
-- Built-in state management, graph visualization tools
-- Heavyweight dependency, steeper learning curve
-- Rejected: Overkill for 7-agent system, prefer lightweight custom implementation
-
-**4. Human-in-the-loop agent selection**
+**3. Human-in-the-loop agent selection**
 - User chooses agent per step via UI
 - Maximum control, educational for users
 - Rejected: Poor UX for non-technical users, breaks "agentic" value proposition
 
-**5. Reinforcement learning for routing**
+**4. Reinforcement learning for routing**
 - Optimize agent selection based on outcome quality
 - Complex training pipeline, requires labeled data
 - Rejected: Premature optimization, LLM routing sufficient for MVP

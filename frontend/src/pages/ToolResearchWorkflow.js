@@ -254,7 +254,7 @@ const ToolResearchWorkflow = () => {
             yPosition += 5;
           });
         } else {
-          yPosition += 6; // Increased empty line spacing between paragraphs
+          yPosition += 3;
         }
       }
     });
@@ -280,10 +280,15 @@ const ToolResearchWorkflow = () => {
     pdf.text(`Topic: ${topic}`, margin, yPosition);
     yPosition += 10;
     
+    // Strip the References/Sources section from AI content to avoid duplication
+    const stripReferencesSection = (text) =>
+      text.replace(/\n#{1,3}\s*(references|r\u00e9f\u00e9rences|sources)\s*\n[\s\S]*/i, '');
+
     // Research content with formatting
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    const content = result.revised_report || result.research_report || '';
+    const rawContent = result.revised_report || result.research_report || '';
+    const content = stripReferencesSection(rawContent);
     yPosition = addFormattedTextToPDF(pdf, content, pageWidth, margin, yPosition);
     
     // Sources
@@ -305,7 +310,9 @@ const ToolResearchWorkflow = () => {
           pdf.addPage();
           yPosition = margin;
         }
-        const sourceText = `[${index + 1}] ${source.title || source.url}`;
+        const title = source.title || source.url || '';
+        const url = source.url || '';
+        const sourceText = url ? `[${index + 1}] ${title}: ${url}` : `[${index + 1}] ${title}`;
         const sourceLines = pdf.splitTextToSize(sourceText, pageWidth - 2 * margin);
         sourceLines.forEach(line => {
           pdf.text(line, margin, yPosition);
@@ -480,8 +487,10 @@ const ToolResearchWorkflow = () => {
                 <span>Download PDF</span>
               </button>
             </div>
-            <div className="prose max-w-none">
-              <ReactMarkdown>{result.revised_report || result.research_report}</ReactMarkdown>
+            <div className="prose max-w-none prose-p:my-2 prose-p:leading-relaxed">
+              <ReactMarkdown>
+                {(result.revised_report || result.research_report || '').replace(/\n#{1,3}\s*(references|r\u00e9f\u00e9rences|sources)\s*\n[\s\S]*/i, '')}
+              </ReactMarkdown>
             </div>
           </div>
           
