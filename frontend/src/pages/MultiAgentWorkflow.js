@@ -95,7 +95,8 @@ const MultiAgentWorkflow = () => {
               ...prev,
               plan: data.data.plan,
               history: data.data.history,
-              final_report: data.data.final_report
+              final_report: data.data.final_report,
+              sources: data.data.sources || []
             }));
           }
           setProgressMessage('');
@@ -118,6 +119,7 @@ const MultiAgentWorkflow = () => {
             plan: data.plan || [],
             history: data.history || [],
             final_report: data.final_report || '',
+            sources: data.sources || [],
             cacheHit: true
           };
           setResult(cacheResult);

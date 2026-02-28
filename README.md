@@ -547,7 +547,7 @@ cd terraform
 **Provisions automatically:**
 - Resource Group (`rg-agentic-ai-research`)
 - Log Analytics Workspace (monitoring)
-- Container App Environment
+- Container App Environment 
 - Azure Container Registry (Docker images)
 - Backend Container App (FastAPI)
 - Frontend Container App (React)

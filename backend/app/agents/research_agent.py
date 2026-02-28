@@ -14,6 +14,7 @@ class ResearchAgent(BaseAgent):
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.RESEARCH_TEMPERATURE)
         self.client = OpenAI()
+        self.collected_sources: list = []
     
     async def execute(self, task: str, tools: list = None, tool_func_mapping: dict = None, **kwargs) -> str:
         """Execute research task using available tools with full execution support"""
@@ -57,6 +58,9 @@ Instructions:
 - Be thorough and academic in your research approach
 - **CRITICAL: Respond in the SAME LANGUAGE as the task** (French task → French response, English task → English response, etc.)"""
         
+        # Reset sources for this execution
+        self.collected_sources = []
+        
         try:
             messages = [{"role": "user", "content": prompt}]
             
@@ -96,6 +100,14 @@ Instructions:
                     
                     if func_name in tool_func_mapping:
                         tool_result = tool_func_mapping[func_name](**func_args)
+                        # Collect sources from tool results
+                        if isinstance(tool_result, list):
+                            for item in tool_result:
+                                if isinstance(item, dict) and item.get("url") and not item.get("error"):
+                                    self.collected_sources.append({
+                                        "title": item.get("title") or item["url"],
+                                        "url": item["url"]
+                                    })
                         messages.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,

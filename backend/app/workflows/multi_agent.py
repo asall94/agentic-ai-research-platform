@@ -1,5 +1,6 @@
 from app.agents import PlannerAgent, ResearchAgent, WriterAgent, EditorAgent
 from app.core.config import settings
+from app.utils import filter_relevant_sources
 from openai import OpenAI
 import json
 import re
@@ -107,13 +108,14 @@ Team work history:
             "output": final_report
         })
         
-        # Extract sources ONLY from final output (retained info only)
-        import re
-        sources = []
-        links = re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_report)
-        for title, url in links:
-            if url.startswith('http'):
+        # Collect sources: primary from research agent tool calls, regex fallback
+        sources = list(self.agents["research_agent"].collected_sources)
+        seen_urls = {s["url"] for s in sources}
+        for title, url in re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_report):
+            if url.startswith('http') and url not in seen_urls:
                 sources.append({"title": title, "url": url})
+                seen_urls.add(url)
+        sources = filter_relevant_sources(sources, final_report)
         
         logger.info("Multi-agent workflow completed")
         

@@ -123,7 +123,7 @@ async def stream_reflection_workflow(workflow, topic: str, **kwargs) -> AsyncGen
     # Revision step
     yield "data: " + json.dumps({
         "type": "progress",
-        "step": "revision",
+        "step": "revised",
         "message": "Revising based on feedback..."
     }) + "\n\n"
     
@@ -187,7 +187,7 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     # Step 3: Revision
     yield "data: " + json.dumps({
         "type": "progress",
-        "step": "revision",
+        "step": "revised",
         "message": "Revising based on analysis..."
     }) + "\n\n"
     
@@ -196,7 +196,7 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     yield "data: " + json.dumps({
         "type": "step_complete",
-        "step": "revision",
+        "step": "revised",
         "data": revised_report
     }) + "\n\n"
     
@@ -209,18 +209,21 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     html_output = await workflow._convert_to_html(revised_report)
     
-    # Final result
+    # Final result — collect sources from tool call results, filter to relevant ones
+    from app.utils import filter_relevant_sources
+    raw_sources = list(research_agent.collected_sources)
+    sources = filter_relevant_sources(raw_sources, revised_report or research_report)
     final_result = {
         "research_report": research_report,
         "reflection": reflection,
         "revised_report": revised_report,
         "html_output": html_output,
-        "sources": []
+        "sources": sources[:10]
     }
     
     yield "data: " + json.dumps({
         "type": "step_complete",
-        "step": "final",
+        "step": "formatting",
         "data": final_result
     }) + "\n\n"
 
@@ -274,10 +277,44 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
             "data": {"step": step, "agent": agent_name, "output": output}
         }) + "\n\n"
     
-    # Final output
-    final_output = history[-1]["output"] if history else "No output generated"
+    # Final synthesis — WriterAgent produces polished report (mirrors MultiAgentWorkflow.execute)
+    yield "data: " + json.dumps({
+        "type": "progress",
+        "step": f"step_{len(plan_steps) + 1}",
+        "message": "Synthesizing final report..."
+    }) + "\n\n"
+
+    synthesis_task = f"""You are the WriterAgent responsible for producing the final polished report.
+
+Based on all the work done by the team below, produce a comprehensive, well-structured final report on the topic: "{topic}"
+
+Team work history:
+{workflow._build_context(history)}
+
+**Your task:**
+- Synthesize all research findings into a coherent narrative
+- Incorporate editorial feedback and improvements suggested by the editor
+- Structure the content with clear sections and flow
+- Include all relevant citations and sources
+- Produce publication-ready content in the SAME LANGUAGE as the original topic
+
+**IMPORTANT:** Return ONLY the final polished report text, NOT meta-commentary or explanations about what you did."""
+
+    final_report = await workflow.agents["writer_agent"].execute(synthesis_task)
+
+    # Collect and filter sources
+    import re as _re
+    from app.utils import filter_relevant_sources
+    sources = list(workflow.agents["research_agent"].collected_sources)
+    seen_urls = {s["url"] for s in sources}
+    for title, url in _re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_report):
+        if url.startswith('http') and url not in seen_urls:
+            sources.append({"title": title, "url": url})
+            seen_urls.add(url)
+    sources = filter_relevant_sources(sources, final_report)
+
     yield "data: " + json.dumps({
         "type": "step_complete",
         "step": "final",
-        "data": {"plan": plan_steps, "history": history, "final_report": final_output}
+        "data": {"plan": plan_steps, "history": history, "final_report": final_report, "sources": sources[:10]}
     }) + "\n\n"

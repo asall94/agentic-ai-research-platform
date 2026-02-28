@@ -247,7 +247,7 @@ const ReflectionWorkflow = () => {
     // Title
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Reflection Workflow - Final Draft', margin, yPosition);
+    pdf.text('Reflection Workflow - Final Output', margin, yPosition);
     yPosition += 10;
     
     // Topic
@@ -372,7 +372,7 @@ const ReflectionWorkflow = () => {
         <div className="space-y-6">
           <div className="card">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Final Draft</h2>
+              <h2 className="text-2xl font-bold text-gray-800">Final Output</h2>
               <button
                 onClick={downloadPDF}
                 className="text-primary-600 hover:text-primary-700 flex items-center space-x-2 font-medium"

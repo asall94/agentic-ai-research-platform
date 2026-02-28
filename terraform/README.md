@@ -93,7 +93,7 @@ terraform output
 - `init` - Download Azure provider
 - `plan` - Preview changes (7 resources)
 - `apply` - Create/update infrastructure
-- `destroy` - Delete all resources
+- `destroy` - Delete all resources 
 - `output` - Show deployment URLs and ACR credentials
 
 **Example logs:**

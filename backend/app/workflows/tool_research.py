@@ -3,8 +3,10 @@ from app.tools.arxiv_tool import arxiv_search_tool, arxiv_tool_def
 from app.tools.tavily_tool import tavily_search_tool, tavily_tool_def
 from app.tools.wikipedia_tool import wikipedia_search_tool, wikipedia_tool_def
 from app.core.config import settings
+from app.utils import filter_relevant_sources
 from openai import OpenAI
 import json
+import re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -72,14 +74,15 @@ class ToolResearchWorkflow:
         
         logger.info("Tool research workflow completed")
         
-        # Extract sources ONLY from final revised report (retained info only)
-        import re
-        sources = []
+        # Collect sources: primary from tool call results, regex fallback for in-text links
+        sources = list(research_agent.collected_sources)  # From actual tool calls
         final_output = reflection_result.get("revised_report") or research_report
-        links = re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_output)
-        for title, url in links:
-            if url.startswith('http'):
+        seen_urls = {s["url"] for s in sources}
+        for title, url in re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_output):
+            if url.startswith('http') and url not in seen_urls:
                 sources.append({"title": title, "url": url})
+                seen_urls.add(url)
+        sources = filter_relevant_sources(sources, final_output)
         
         return {
             "research_report": research_report,

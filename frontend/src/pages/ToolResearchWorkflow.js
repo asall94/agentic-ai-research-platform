@@ -84,7 +84,7 @@ const ToolResearchWorkflow = () => {
           // Don't clear currentStep here - let onProgress handle it for next step
           
           // Capture final result with all steps
-          if (data.step === 'final') {
+          if (data.step === 'formatting') {
             console.log('[Tool Research] Setting final result:', data.data);
             setResult(data.data);
           }
