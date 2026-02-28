@@ -509,6 +509,9 @@ const MultiAgentWorkflow = () => {
             <div className="prose max-w-none prose-p:my-2 prose-p:leading-relaxed">
               <ReactMarkdown>{result.final_report}</ReactMarkdown>
             </div>
+            {result.cacheHit && (
+              <p className="text-sm text-green-600 mt-4">Cache hit - instant result</p>
+            )}
           </div>
           
           {/* Sources Section - Industry Standard */}
