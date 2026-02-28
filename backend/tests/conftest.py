@@ -2,7 +2,7 @@
 import sys
 import os
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
 # Add backend to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -64,16 +64,17 @@ def mock_openai_client(request):
         yield None
         return
     
-    # Patch OpenAI in all agent modules
+    # Patch AsyncOpenAI in all agent modules (agents migrated from sync OpenAI)
     patches = [
-        patch('app.agents.draft_agent.OpenAI'),
-        patch('app.agents.reflection_agent.OpenAI'),
-        patch('app.agents.revision_agent.OpenAI'),
-        patch('app.agents.research_agent.OpenAI'),
-        patch('app.agents.writer_agent.OpenAI'),
-        patch('app.agents.editor_agent.OpenAI'),
-        patch('app.agents.planner_agent.OpenAI'),
-        patch('app.workflows.multi_agent.OpenAI'),
+        patch('app.agents.draft_agent.AsyncOpenAI'),
+        patch('app.agents.reflection_agent.AsyncOpenAI'),
+        patch('app.agents.revision_agent.AsyncOpenAI'),
+        patch('app.agents.research_agent.AsyncOpenAI'),
+        patch('app.agents.writer_agent.AsyncOpenAI'),
+        patch('app.agents.editor_agent.AsyncOpenAI'),
+        patch('app.agents.planner_agent.AsyncOpenAI'),
+        patch('app.workflows.multi_agent.AsyncOpenAI'),
+        patch('app.workflows.tool_research.AsyncOpenAI'),
     ]
     
     # Create mock response
@@ -84,9 +85,9 @@ def mock_openai_client(request):
     mock_response = Mock()
     mock_response.choices = [mock_choice]
     
-    # Configure mock client
+    # Configure mock client — .create() is async so use AsyncMock
     mock_client_instance = Mock()
-    mock_client_instance.chat.completions.create.return_value = mock_response
+    mock_client_instance.chat.completions.create = AsyncMock(return_value=mock_response)
     
     # Start all patches
     mocks = []
