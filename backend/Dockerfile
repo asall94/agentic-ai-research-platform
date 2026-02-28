@@ -30,6 +30,9 @@ COPY --chown=appuser:appuser . .
 # Switch to non-root user
 USER appuser
 
+# Pre-download embedding model at build time to avoid runtime download failures
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # Expose port
 EXPOSE 8000
 

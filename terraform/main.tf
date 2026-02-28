@@ -70,8 +70,8 @@ resource "azurerm_container_app" "backend" {
     container {
       name   = "backend"
       image  = var.backend_image
-      cpu    = 0.25
-      memory = "0.5Gi"
+      cpu    = 1.0
+      memory = "2Gi"
 
       env {
         name  = "OPENAI_API_KEY"
