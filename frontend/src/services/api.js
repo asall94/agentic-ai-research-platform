@@ -11,13 +11,7 @@ const apiClient = axios.create({
 });
 
 export const workflowService = {
-  // Simple Reflection Workflow (Q2)
-  executeReflectionWorkflow: async (data) => {
-    const response = await apiClient.post('/workflows/reflection', data);
-    return response.data;
-  },
-
-  // Tool Research Workflow (Q3)
+  // Tool Research Workflow
   executeToolResearchWorkflow: async (data) => {
     const response = await apiClient.post('/workflows/tool-research', data);
     return response.data;

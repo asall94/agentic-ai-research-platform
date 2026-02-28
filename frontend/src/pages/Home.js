@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { WorkflowCard } from '../components/WorkflowCard';
 import { healthService } from '../services/api';
 import { 
-  DocumentTextIcon, 
   MagnifyingGlassIcon, 
   UsersIcon,
   CheckCircleIcon,
@@ -28,14 +27,6 @@ const Home = () => {
   };
   
   const workflows = [
-    {
-      id: 'reflection',
-      title: 'Simple Reflection',
-      description: 'Draft → Critique → Revision workflow for iterative content improvement',
-      icon: DocumentTextIcon,
-      color: 'primary',
-      route: '/workflows/reflection'
-    },
     {
       id: 'tool-research',
       title: 'Tool-Enhanced Research',
@@ -89,7 +80,7 @@ const Home = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
         {workflows.map((workflow) => (
           <WorkflowCard
             key={workflow.id}

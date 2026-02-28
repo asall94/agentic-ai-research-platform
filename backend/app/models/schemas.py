@@ -19,13 +19,6 @@ class WorkflowRequest(BaseModel):
         return v
 
 
-class ReflectionWorkflowRequest(WorkflowRequest):
-    """Request for simple reflection workflow (Q2)"""
-    draft_model: Optional[str] = Field(None, description="Model for drafting")
-    reflection_model: Optional[str] = Field(None, description="Model for reflection")
-    revision_model: Optional[str] = Field(None, description="Model for revision")
-
-
 class ToolResearchWorkflowRequest(WorkflowRequest):
     """Request for tool-enhanced research workflow (Q3)"""
     tools: Optional[List[Literal["arxiv", "tavily", "wikipedia"]]] = Field(
@@ -53,13 +46,6 @@ class WorkflowResponse(BaseModel):
     execution_time: float = Field(..., description="Execution time in seconds")
     result: Dict[str, Any] = Field(..., description="Workflow results")
     error: Optional[str] = Field(None, description="Error message if failed")
-
-
-class ReflectionWorkflowResponse(WorkflowResponse):
-    """Response from reflection workflow"""
-    draft: str
-    reflection: str
-    revised: str
 
 
 class ToolResearchWorkflowResponse(WorkflowResponse):

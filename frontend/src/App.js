@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import ReflectionWorkflow from './pages/ReflectionWorkflow';
 import ToolResearchWorkflow from './pages/ToolResearchWorkflow';
 import MultiAgentWorkflow from './pages/MultiAgentWorkflow';
 import History from './pages/History';
@@ -17,7 +16,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/workflows" element={<Navigate to="/" replace />} />
-            <Route path="/workflows/reflection" element={<ReflectionWorkflow />} />
             <Route path="/workflows/tool-research" element={<ToolResearchWorkflow />} />
             <Route path="/workflows/multi-agent" element={<MultiAgentWorkflow />} />
             <Route path="/history" element={<History />} />

@@ -1,13 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import (
-    ReflectionWorkflowRequest,
-    ReflectionWorkflowResponse,
     ToolResearchWorkflowRequest,
     ToolResearchWorkflowResponse,
     MultiAgentWorkflowRequest,
     MultiAgentWorkflowResponse
 )
-from app.workflows.simple_reflection import SimpleReflectionWorkflow
 from app.workflows.tool_research import ToolResearchWorkflow
 from app.workflows.multi_agent import MultiAgentWorkflow
 from app.services.cache_service import cache_service
@@ -23,99 +20,6 @@ import json
 
 router = APIRouter()
 logger = StructuredLogger(__name__)
-
-
-@router.post("/reflection", response_model=ReflectionWorkflowResponse)
-async def execute_reflection_workflow(request: ReflectionWorkflowRequest):
-    """Execute simple reflection workflow (Q2)"""
-    
-    workflow_id = str(uuid.uuid4())
-    start_time = time.time()
-    
-    try:
-        logger.info(
-            "Starting reflection workflow",
-            workflow_id=workflow_id,
-            workflow_type="simple_reflection",
-            topic=request.topic
-        )
-        
-        # Check cache
-        cached_result = cache_service.get_cached_result(request.topic, "reflection")
-        if cached_result:
-            execution_time = time.time() - start_time
-            
-            # Track cache hit in Application Insights
-            track_workflow("simple_reflection", execution_time, cache_hit=True)
-            
-            return ReflectionWorkflowResponse(
-                workflow_id=workflow_id,
-                workflow_type="simple_reflection",
-                topic=request.topic,
-                status="completed",
-                created_at=datetime.now(),
-                execution_time=execution_time,
-                result=cached_result,
-                draft=cached_result["draft"],
-                reflection=cached_result["reflection"],
-                revised=cached_result["revised"]
-            )
-        
-        workflow = SimpleReflectionWorkflow(
-            draft_model=request.draft_model,
-            reflection_model=request.reflection_model,
-            revision_model=request.revision_model
-        )
-        
-        result = await workflow.execute(request.topic)
-        execution_time = time.time() - start_time
-        
-        # Store in cache
-        cache_service.store_result(request.topic, "reflection", result)
-        
-        # Track metrics
-        metrics_service.track_workflow(
-            workflow_type="simple_reflection",
-            topic=request.topic,
-            execution_time=execution_time,
-            cache_hit=False,
-            steps_count=3,
-            agents_used=["draft", "reflection", "revision"]
-        )
-        
-        # Track in Application Insights
-        track_workflow("simple_reflection", execution_time, cache_hit=False)
-        
-        return ReflectionWorkflowResponse(
-            workflow_id=workflow_id,
-            workflow_type="simple_reflection",
-            topic=request.topic,
-            status="completed",
-            created_at=datetime.now(),
-            execution_time=execution_time,
-            result=result,
-            draft=result["draft"],
-            reflection=result["reflection"],
-            revised=result["revised"]
-        )
-        
-    except Exception as e:
-        execution_time = time.time() - start_time
-        logger.error(f"Reflection workflow {workflow_id} failed: {e}")
-        
-        return ReflectionWorkflowResponse(
-            workflow_id=workflow_id,
-            workflow_type="simple_reflection",
-            topic=request.topic,
-            status="failed",
-            created_at=datetime.now(),
-            execution_time=execution_time,
-            result={},
-            draft="",
-            reflection="",
-            revised="",
-            error=str(e)
-        )
 
 
 @router.post("/tool-research", response_model=ToolResearchWorkflowResponse)
@@ -260,38 +164,6 @@ async def execute_multi_agent_workflow(request: MultiAgentWorkflowRequest):
             final_report="",
             error=str(e)
         )
-
-
-@router.get("/reflection/stream")
-async def stream_reflection_workflow(topic: str, draft_model: str = None, reflection_model: str = None, revision_model: str = None):
-    """Stream reflection workflow with real-time progress events"""
-    
-    # Validate topic
-    topic = topic.strip()
-    if not topic:
-        async def error_stream():
-            yield "data: " + json.dumps({"type": "error", "message": "Topic cannot be empty"}) + "\n\n"
-        return StreamingResponse(error_stream(), media_type="text/event-stream")
-    if len(topic) > 500:
-        async def error_stream():
-            yield "data: " + json.dumps({"type": "error", "message": "Topic must be 500 characters or less"}) + "\n\n"
-        return StreamingResponse(error_stream(), media_type="text/event-stream")
-    
-    workflow = SimpleReflectionWorkflow(
-        draft_model=draft_model,
-        reflection_model=reflection_model,
-        revision_model=revision_model
-    )
-    
-    return StreamingResponse(
-        stream_workflow_progress("simple_reflection", topic, workflow, cache_service),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
-        }
-    )
 
 
 @router.get("/tool-research/stream")

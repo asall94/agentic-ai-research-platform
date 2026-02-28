@@ -33,20 +33,7 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
         # Cache miss - stream workflow execution
         result_data = {}
         
-        if workflow_type == "simple_reflection":
-            async for event in stream_reflection_workflow(workflow_func, topic, **kwargs):
-                yield event
-                # Capture step data for caching
-                try:
-                    event_str = event.strip()
-                    if event_str.startswith("data: "):
-                        event_str = event_str[6:]  # Remove "data: " prefix
-                    event_data = json.loads(event_str)
-                    if event_data.get("type") == "step_complete":
-                        result_data[event_data["step"]] = event_data["data"]
-                except (json.JSONDecodeError, KeyError):
-                    pass  # Skip malformed events
-        elif workflow_type == "tool_research":
+        if workflow_type == "tool_research":
             async for event in stream_tool_research_workflow(workflow_func, topic, **kwargs):
                 yield event
                 try:
@@ -87,52 +74,6 @@ async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func
             "type": "error",
             "message": str(e)
         }) + "\n\n"
-
-
-async def stream_reflection_workflow(workflow, topic: str, **kwargs) -> AsyncGenerator[str, None]:
-    """Stream reflection workflow: draft → reflection → revised"""
-    
-    # Draft step
-    yield "data: " + json.dumps({
-        "type": "progress",
-        "step": "draft",
-        "message": "Generating initial draft..."
-    }) + "\n\n"
-    
-    draft = await workflow.draft_agent.execute(topic)
-    yield "data: " + json.dumps({
-        "type": "step_complete",
-        "step": "draft",
-        "data": draft
-    }) + "\n\n"
-    
-    # Reflection step
-    yield "data: " + json.dumps({
-        "type": "progress",
-        "step": "reflection",
-        "message": "Analyzing draft and generating critique..."
-    }) + "\n\n"
-    
-    reflection = await workflow.reflection_agent.execute(draft)
-    yield "data: " + json.dumps({
-        "type": "step_complete",
-        "step": "reflection",
-        "data": reflection
-    }) + "\n\n"
-    
-    # Revision step
-    yield "data: " + json.dumps({
-        "type": "progress",
-        "step": "revised",
-        "message": "Revising based on feedback..."
-    }) + "\n\n"
-    
-    revised = await workflow.revision_agent.execute(draft, reflection)
-    yield "data: " + json.dumps({
-        "type": "step_complete",
-        "step": "revised",
-        "data": revised
-    }) + "\n\n"
 
 
 async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> AsyncGenerator[str, None]:

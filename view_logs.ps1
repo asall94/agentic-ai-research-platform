@@ -18,13 +18,13 @@ if (-not $backendProcess) {
   "timestamp": "2025-11-22T10:30:45.123456Z",
   "level": "INFO",
   "logger": "app.api.routes.workflows",
-  "message": "Starting reflection workflow",
+  "message": "Starting tool research workflow",
   "module": "workflows",
-  "function": "execute_reflection_workflow",
+  "function": "execute_tool_research_workflow",
   "line": 32,
   "correlation_id": "abc123-def456",
   "workflow_id": "workflow-789",
-  "workflow_type": "simple_reflection",
+  "workflow_type": "tool_research",
   "client_ip": "127.0.0.1"
 }
 "@ -ForegroundColor White

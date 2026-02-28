@@ -12,12 +12,6 @@ Production-ready multi-agent research platform with autonomous workflow orchestr
 
 ## Agentic Workflows
 
-**Simple Reflection** - Iterative draft improvement via self-critique
-- DraftAgent (T=0.7) generates initial essay
-- ReflectionAgent (T=0.3) provides structured critique
-- RevisionAgent (T=0.5) produces refined version
-- Use case: Academic writing, content improvement
-
 **Tool-Enhanced Research** - Multi-source synthesis with external APIs
 - ResearchAgent orchestrates parallel searches (arXiv, Tavily, Wikipedia)
 - OpenAI function calling with max_turns=6 for iterative tool usage
@@ -32,7 +26,7 @@ Production-ready multi-agent research platform with autonomous workflow orchestr
 - Use case: Complex research reports, multi-stage analysis
 
 **Agent Architecture:**
-- 7 specialized agents: Draft, Reflection, Revision, Research, Writer, Editor, Planner
+- 6 specialized agents: Reflection, Revision, Research, Writer, Editor, Planner
 - Abstract BaseAgent class with async `execute()` contract
 - Temperature tuning per role: creative (0.7), analytical (0.3), editorial (0.5)
 - Stateless design with explicit context passing (no shared memory)
@@ -52,11 +46,9 @@ graph TB
     end
     
     subgraph "Agentic Layer"
-        WF1[Reflection Workflow<br/>Draft→Critique→Revise]
         WF2[Tool Research<br/>Multi-source Synthesis]
         WF3[Multi-Agent<br/>LLM-Driven Routing]
         
-        DRAFT[Draft Agent T=0.7]
         REFLECT[Reflection Agent T=0.3]
         REVISE[Revision Agent T=0.5]
         RESEARCH[Research Agent T=0.3]
@@ -76,13 +68,13 @@ graph TB
     MIDDLEWARE --> API
     API --> CACHE
     
-    API --> WF1 & WF2 & WF3
+    API --> WF2 & WF3
     
-    WF1 --> DRAFT & REFLECT & REVISE
     WF2 --> RESEARCH
     WF3 --> PLANNER & RESEARCH & WRITER & EDITOR
+    WF3 -.-> REFLECT & REVISE
     
-    DRAFT & REFLECT & REVISE & WRITER & EDITOR & PLANNER --> OPENAI
+    REFLECT & REVISE & WRITER & EDITOR & PLANNER --> OPENAI
     RESEARCH --> OPENAI & ARXIV & TAVILY & WIKI
     
     style UI fill:#61dafb
@@ -266,20 +258,6 @@ See `DOCKER.md` for advanced Docker usage.
 
 ## API Usage
 
-**Reflection Workflow (Standard)**
-```powershell
-curl -X POST http://localhost:8000/api/v1/workflows/reflection `
-  -H "Content-Type: application/json" `
-  -d '{"topic": "AI Ethics in Healthcare"}'
-```
-
-**Reflection Workflow (Streaming)**
-```powershell
-curl -N http://localhost:8000/api/v1/workflows/reflection/stream?topic=AI%20Ethics
-# Returns SSE stream with progressive updates
-# Event types: start, cache_hit, progress, step_complete, complete, error
-```
-
 **Research Workflow (Standard)**
 ```powershell
 curl -X POST http://localhost:8000/api/v1/workflows/tool-research `
@@ -353,7 +331,7 @@ Server-Sent Events (SSE) provide ChatGPT-style progressive rendering:
 ```javascript
 import { streamWorkflow } from './services/streamingApi';
 
-streamWorkflow('reflection', { topic: 'AI Ethics' }, {
+streamWorkflow('tool-research', { topic: 'Quantum Computing', tools: ['arxiv', 'wikipedia'] }, {
   onProgress: (message) => console.log(message),
   onStepComplete: (step, data) => updateUI(step, data),
   onCacheHit: (data) => showInstantResult(data),
@@ -448,7 +426,7 @@ LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
   "timestamp": "2025-11-22T10:30:45Z",
   "level": "INFO",
   "logger": "app.api.routes.workflows",
-  "message": "Starting reflection workflow",
+  "message": "Starting tool_research workflow",
   "correlation_id": "abc-123",
   "workflow_id": "workflow-456",
   "client_ip": "127.0.0.1",
@@ -474,8 +452,8 @@ LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
 ```
 
 **Test coverage includes:**
-- All 7 agents (draft, reflection, revision, research, writer, editor, planner)
-- 3 workflows (simple reflection, tool research, multi-agent)
+- All 6 agents (reflection, revision, research, writer, editor, planner)
+- 2 workflows (tool research, multi-agent)
 - API endpoints (health, workflows, cache, metrics)
 - Middleware (rate limiting, logging)
 
@@ -564,7 +542,7 @@ cd terraform
 
 **Skills Demonstrated:**
 - Multi-agent orchestration with LLM-driven task routing
-- Agentic AI workflows (reflection, tool integration, planning)
+- Agentic AI workflows (tool integration, multi-agent orchestration, planning)
 - Production FastAPI deployment with async patterns
 - Server-Sent Events (SSE) for real-time streaming with cache-aware optimization
 - Semantic caching with sentence embeddings (60-80% cost reduction)

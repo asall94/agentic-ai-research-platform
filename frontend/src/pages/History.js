@@ -9,7 +9,6 @@ import {
   XCircleIcon,
   ClockIcon as PendingIcon,
   MagnifyingGlassIcon,
-  DocumentTextIcon,
   UsersIcon,
   BoltIcon
 } from '@heroicons/react/24/outline';
@@ -82,16 +81,14 @@ const History = () => {
 
   const getWorkflowIcon = (type) => {
     switch(type) {
-      case 'reflection': return DocumentTextIcon;
       case 'tool-research': return MagnifyingGlassIcon;
       case 'multi-agent': return UsersIcon;
-      default: return DocumentTextIcon;
+      default: return MagnifyingGlassIcon;
     }
   };
 
   const getWorkflowName = (type) => {
     switch(type) {
-      case 'reflection': return 'Simple Reflection';
       case 'tool-research': return 'Tool Research';
       case 'multi-agent': return 'Multi-Agent';
       default: return type;
@@ -171,7 +168,6 @@ const History = () => {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">All Workflows</option>
-                <option value="reflection">Simple Reflection</option>
                 <option value="tool-research">Tool Research</option>
                 <option value="multi-agent">Multi-Agent</option>
               </select>
