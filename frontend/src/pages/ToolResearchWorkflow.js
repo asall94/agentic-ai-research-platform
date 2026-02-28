@@ -140,6 +140,10 @@ const ToolResearchWorkflow = () => {
     const lines = markdown.split('\n');
     
     lines.forEach(line => {
+      // Reset font state at the start of every line to prevent bold/style leakage
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
       if (yPosition > 280) {
         pdf.addPage();
         yPosition = margin;

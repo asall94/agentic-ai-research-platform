@@ -4,7 +4,7 @@ from app.tools.tavily_tool import tavily_search_tool, tavily_tool_def
 from app.tools.wikipedia_tool import wikipedia_search_tool, wikipedia_tool_def
 from app.core.config import settings
 from app.utils import filter_relevant_sources
-from openai import OpenAI
+from openai import AsyncOpenAI
 import json
 import re
 import logging
@@ -23,7 +23,7 @@ class ToolResearchWorkflow:
     ):
         self.model = model or settings.DEFAULT_RESEARCH_MODEL
         self.max_results = max_results
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
         
         # Map tool names to definitions for OpenAI API
         self.tool_def_mapping = {
@@ -108,7 +108,7 @@ Output ONLY valid JSON in this exact format with no additional text:
 {{"reflection": "your reflection here", "revised_report": "your revised report here"}}"""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are an academic reviewer and editor."},
@@ -149,7 +149,7 @@ Requirements:
 Output the complete HTML document starting with <!DOCTYPE html>."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You convert plaintext reports into full clean HTML documents."},

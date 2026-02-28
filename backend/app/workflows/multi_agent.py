@@ -1,7 +1,7 @@
 from app.agents import PlannerAgent, ResearchAgent, WriterAgent, EditorAgent
 from app.core.config import settings
 from app.utils import filter_relevant_sources
-from openai import OpenAI
+from openai import AsyncOpenAI
 import json
 import re
 import logging
@@ -21,7 +21,7 @@ class MultiAgentWorkflow:
         self.model = model or settings.DEFAULT_RESEARCH_MODEL
         self.max_steps = max_steps
         self.limit_steps = limit_steps
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
         
         # Agent registry
         self.agents = {
@@ -144,7 +144,7 @@ Instruction: "{step}"
 """
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": agent_decision_prompt}],
                 temperature=0,

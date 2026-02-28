@@ -161,6 +161,10 @@ const MultiAgentWorkflow = () => {
     const lines = markdown.split('\n');
     
     lines.forEach(line => {
+      // Reset font state at the start of every line to prevent bold/style leakage
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+
       if (yPosition > 280) {
         pdf.addPage();
         yPosition = margin;
@@ -401,7 +405,7 @@ const MultiAgentWorkflow = () => {
         </div>
       )}
       
-      {loading && !result && (
+      {loading && !result?.final_report && (
         <div className="card">
           {/* Current Progress Message */}
           {progressMessage && (

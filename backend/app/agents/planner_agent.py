@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import ast
 import json
@@ -13,7 +13,7 @@ class PlannerAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o-mini", temperature: float = None):
         super().__init__(model, temperature or settings.PLANNER_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, topic: str, **kwargs) -> list:
         """Generate a research plan as a list of steps"""
@@ -41,7 +41,7 @@ Topic: "{topic}"
 """
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": user_prompt}],
                 temperature=self.temperature,

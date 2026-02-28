@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import logging
 
@@ -11,7 +11,7 @@ class WriterAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.WRITER_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, task: str, **kwargs) -> str:
         """Execute writing task"""
@@ -32,7 +32,7 @@ Your capabilities include:
 Always produce high-quality, publication-ready content that meets academic standards."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},

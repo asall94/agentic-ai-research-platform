@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import logging
 
@@ -11,7 +11,7 @@ class EditorAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.EDITOR_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, task: str, **kwargs) -> str:
         """Execute editorial task"""
@@ -33,7 +33,7 @@ Your responsibilities include:
 Your feedback should be specific, actionable, and focused on elevating the quality of the work to publication standards."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},

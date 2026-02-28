@@ -1,7 +1,8 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 from datetime import datetime
+import asyncio
 import json
 import logging
 
@@ -13,7 +14,7 @@ class ResearchAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.RESEARCH_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
         self.collected_sources: list = []
     
     async def execute(self, task: str, tools: list = None, tool_func_mapping: dict = None, **kwargs) -> str:
@@ -74,7 +75,7 @@ Instructions:
                 kwargs_api["tool_choice"] = "auto"
             
             # Get initial response
-            response = self.client.chat.completions.create(**kwargs_api)
+            response = await self.client.chat.completions.create(**kwargs_api)
             message = response.choices[0].message
             
             # If tools were used, need to execute them manually (SDK doesn't auto-execute)
@@ -99,7 +100,8 @@ Instructions:
                     func_args = json.loads(tool_call.function.arguments)
                     
                     if func_name in tool_func_mapping:
-                        tool_result = tool_func_mapping[func_name](**func_args)
+                        tool_func = tool_func_mapping[func_name]
+                        tool_result = await asyncio.to_thread(tool_func, **func_args)
                         # Collect sources from tool results
                         if isinstance(tool_result, list):
                             for item in tool_result:
@@ -115,7 +117,7 @@ Instructions:
                         })
                 
                 # Get final response after tool execution
-                final_response = self.client.chat.completions.create(
+                final_response = await self.client.chat.completions.create(
                     model=self.model,
                     messages=messages
                 )

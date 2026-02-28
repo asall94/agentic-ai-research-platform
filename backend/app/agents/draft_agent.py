@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import logging
 
@@ -11,7 +11,7 @@ class DraftAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.DRAFT_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, topic: str, **kwargs) -> str:
         """Generate a draft essay on the given topic"""
@@ -31,7 +31,7 @@ Your essay should:
 Write the complete essay now."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,

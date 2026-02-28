@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import logging
 
@@ -11,7 +11,7 @@ class RevisionAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o", temperature: float = None):
         super().__init__(model, temperature or settings.REVISION_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, original_draft: str, reflection: str, **kwargs) -> str:
         """Revise a draft based on feedback"""
@@ -39,7 +39,7 @@ Your task is to rewrite the essay, incorporating all the feedback provided above
 Write the complete revised essay now. Output only the final revised essay, without any meta-commentary or explanations."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,

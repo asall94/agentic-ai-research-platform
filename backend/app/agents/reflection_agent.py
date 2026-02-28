@@ -1,5 +1,5 @@
 from .base_agent import BaseAgent
-from openai import OpenAI
+from openai import AsyncOpenAI
 from app.core.config import settings
 import logging
 
@@ -11,7 +11,7 @@ class ReflectionAgent(BaseAgent):
     
     def __init__(self, model: str = "gpt-4o-mini", temperature: float = None):
         super().__init__(model, temperature or settings.REFLECTION_TEMPERATURE)
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
     
     async def execute(self, draft: str, **kwargs) -> str:
         """Provide constructive feedback on a draft"""
@@ -54,7 +54,7 @@ Please analyze this essay critically and provide feedback addressing the followi
 Provide your feedback in paragraph form, being critical but constructive. Focus on specific issues and suggest concrete improvements."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
