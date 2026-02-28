@@ -100,8 +100,15 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     research_agent = ResearchAgent(model=workflow.model)
-    # Pass tools and function mapping for full research capability
-    research_report = await research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
+    # Run research with keepalive pings to prevent SSE timeout on long tool calls
+    research_task = asyncio.create_task(
+        research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
+    )
+    while not research_task.done():
+        await asyncio.sleep(10)
+        if not research_task.done():
+            yield ": keepalive\n\n"
+    research_report = await research_task
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -117,7 +124,12 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     reflection_agent = ReflectionAgent(model=workflow.model)
-    reflection = await reflection_agent.execute(research_report)
+    reflection_task = asyncio.create_task(reflection_agent.execute(research_report))
+    while not reflection_task.done():
+        await asyncio.sleep(10)
+        if not reflection_task.done():
+            yield ": keepalive\n\n"
+    reflection = await reflection_task
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -133,7 +145,12 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     revision_agent = RevisionAgent(model=workflow.model)
-    revised_report = await revision_agent.execute(research_report, reflection)
+    revision_task = asyncio.create_task(revision_agent.execute(research_report, reflection))
+    while not revision_task.done():
+        await asyncio.sleep(10)
+        if not revision_task.done():
+            yield ": keepalive\n\n"
+    revised_report = await revision_task
     
     yield "data: " + json.dumps({
         "type": "step_complete",
