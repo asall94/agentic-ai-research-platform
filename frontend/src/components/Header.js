@@ -14,7 +14,7 @@ const Header = () => {
           <Link to="/" className="flex items-center space-x-3">
             <BeakerIcon className="h-8 w-8" />
             <div>
-              <h1 className="text-2xl font-bold">Agentic Research Platform</h1>
+              <h1 className="text-2xl font-bold">Advanced Agentic Research Platform</h1>
               <p className="text-sm text-primary-100">Multi-Agent AI Research System</p>
             </div>
           </Link>
