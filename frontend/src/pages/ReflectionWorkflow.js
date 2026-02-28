@@ -57,8 +57,7 @@ const ReflectionWorkflow = () => {
             [data.step]: 'completed'
           }));
           
-          // Clear current step to remove spinner
-          setCurrentStep(null);
+          // Don't clear currentStep here - let onProgress handle it for next step
           
           setResult(prev => ({
             ...prev,
@@ -320,7 +319,7 @@ const ReflectionWorkflow = () => {
             <div className="space-y-3">
               {['draft', 'reflection', 'revised'].map((step, idx) => {
                 const isCompleted = progressSteps[step] === 'completed';
-                const isCurrent = currentStep === step;
+                const isCurrent = currentStep === step && !isCompleted;
                 
                 return (
                   <div

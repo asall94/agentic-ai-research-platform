@@ -522,16 +522,17 @@ const MultiAgentWorkflow = () => {
                       {index + 1}
                     </span>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{source.title || source.name}</p>
-                      {source.url && (
-                        <a 
-                          href={source.url} 
-                          target="_blank" 
+                      {source.url ? (
+                        <a
+                          href={source.url}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-primary-600 hover:text-primary-700 underline"
+                          className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
                         >
-                          {source.url}
+                          {source.title || source.name}
                         </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900">{source.title || source.name}</p>
                       )}
                     </div>
                   </div>
