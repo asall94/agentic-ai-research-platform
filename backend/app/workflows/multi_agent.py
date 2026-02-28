@@ -1,10 +1,20 @@
 from app.agents import PlannerAgent, ResearchAgent, WriterAgent, EditorAgent
 from app.core.config import settings
 from app.utils import filter_relevant_sources
+from app.tools.arxiv_tool import arxiv_tool_def, arxiv_search_tool
+from app.tools.tavily_tool import tavily_tool_def, tavily_search_tool
+from app.tools.wikipedia_tool import wikipedia_tool_def, wikipedia_search_tool
 from openai import AsyncOpenAI
 import json
 import re
 import logging
+
+RESEARCH_TOOLS = [arxiv_tool_def, tavily_tool_def, wikipedia_tool_def]
+RESEARCH_TOOL_MAPPING = {
+    "arxiv_search_tool": arxiv_search_tool,
+    "tavily_search_tool": tavily_search_tool,
+    "wikipedia_search_tool": wikipedia_search_tool,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -68,11 +78,17 @@ Your next task is:
 {task}
 """
             
-            # Execute with selected agent
-            if agent_name in self.agents:
+            # Execute with selected agent (research_agent gets tools for source collection)
+            if agent_name == "research_agent":
+                output = await self.agents[agent_name].execute(
+                    enriched_task,
+                    tools=RESEARCH_TOOLS,
+                    tool_func_mapping=RESEARCH_TOOL_MAPPING
+                )
+            elif agent_name in self.agents:
                 output = await self.agents[agent_name].execute(enriched_task)
             else:
-                output = f"⚠️ Unknown agent: {agent_name}"
+                output = f"Unknown agent: {agent_name}"
             
             history.append({
                 "step": step,

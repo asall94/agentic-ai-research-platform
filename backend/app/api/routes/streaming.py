@@ -264,10 +264,23 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
         enriched_task = f"You are {agent_name}.\n\nContext:\n{context}\n\nTask:\n{task}"
         
         agent = workflow.agents.get(agent_name)
-        if agent:
+        if agent_name == "research_agent" and agent:
+            from app.tools.arxiv_tool import arxiv_tool_def, arxiv_search_tool
+            from app.tools.tavily_tool import tavily_tool_def, tavily_search_tool
+            from app.tools.wikipedia_tool import wikipedia_tool_def, wikipedia_search_tool
+            output = await agent.execute(
+                enriched_task,
+                tools=[arxiv_tool_def, tavily_tool_def, wikipedia_tool_def],
+                tool_func_mapping={
+                    "arxiv_search_tool": arxiv_search_tool,
+                    "tavily_search_tool": tavily_search_tool,
+                    "wikipedia_search_tool": wikipedia_search_tool,
+                }
+            )
+        elif agent:
             output = await agent.execute(enriched_task)
         else:
-            output = f"⚠️ Unknown agent: {agent_name}"
+            output = f"Unknown agent: {agent_name}"
         
         history.append({"step": step, "agent": agent_name, "output": output})
         

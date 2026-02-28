@@ -21,7 +21,7 @@ class PlannerAgent(BaseAgent):
         user_prompt = f"""
 You are a planning agent responsible for organizing a research workflow with multiple intelligent agents.
 
-🧠 Available agents:
+Available agents:
 - A research agent who can search the web, Wikipedia, and arXiv.
 - A writer agent who can draft research summaries.
 - An editor agent who can reflect and revise the drafts.
