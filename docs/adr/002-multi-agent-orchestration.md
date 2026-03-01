@@ -7,7 +7,7 @@
 
 ## Context
 
-Research workflows require diverse capabilities: planning, information retrieval, writing, and editing. Fixed agent sequences (simple reflection: draft→critique→revise) work for basic tasks but lack flexibility for multi-step research requiring different expertise at each stage. Users request workflows like "research quantum computing applications, then write a technical report" where optimal agent selection varies by step content.
+Research workflows require diverse capabilities: planning, information retrieval, writing, and editing. Fixed agent sequences (simple reflection: draft->critique->revise) work for basic tasks but lack flexibility for multi-step research requiring different expertise at each stage. Users request workflows like "research quantum computing applications, then write a technical report" where optimal agent selection varies by step content.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Implement LLM-driven agent routing where GPT-4o-mini selects appropriate agents 
 
 **Architecture:**
 - Planner Agent generates research steps from user topic
-- For each step: LLM analyzes step text → returns JSON: `{"agent": "research_agent", "task": "..."}`
+- For each step: LLM analyzes step text -> returns JSON: `{"agent": "research_agent", "task": "..."}`
 - Context builder aggregates previous step outputs (first 300 chars) for downstream agents
 - History tracking stores `{step, agent, output}` for final synthesis
 
@@ -42,19 +42,19 @@ async def _decide_agent(self, step: str) -> dict:
 - Rejected: Inflexible for diverse user requests, requires manual workflow creation per use case
 
 **2. Rule-based agent routing**
-- Keyword matching ("search" → research_agent, "write" → writer_agent)
+- Keyword matching ("search" -> research_agent, "write" -> writer_agent)
 - Faster (no LLM call), deterministic
 - Rejected: Brittle for nuanced tasks ("analyze recent papers" unclear if research or reflection)
 
 **3. Human-in-the-loop agent selection**
 - User chooses agent per step via UI
-- Maximum control, educational for users
+- Maximum control, transparent for end users
 - Rejected: Poor UX for non-technical users, breaks "agentic" value proposition
 
 **4. Reinforcement learning for routing**
 - Optimize agent selection based on outcome quality
 - Complex training pipeline, requires labeled data
-- Rejected: Premature optimization, LLM routing sufficient for MVP
+- Rejected: Premature optimization, LLM routing meets current routing accuracy requirements
 
 ## Consequences
 

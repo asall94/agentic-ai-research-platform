@@ -4,10 +4,10 @@ This directory contains Architecture Decision Records documenting key technical 
 
 ## Purpose
 
-ADRs capture context, alternatives considered, and consequences of architectural decisions. They serve as:
+ADRs document technical choices made during the platform's development. Used for:
 - Historical record of "why we built it this way"
 - Onboarding documentation for new contributors
-- Portfolio evidence of thoughtful engineering decisions
+- Reference for future architectural decisions on the platform
 
 ## Format
 
@@ -39,7 +39,7 @@ Each ADR follows this structure:
 - ADR-005: Upstash free tier (vs $70/month Pinecone)
 
 **Performance**
-- ADR-001: 45s → <500ms latency for cached queries
+- ADR-001: 45s -> <500ms latency for cached queries
 - ADR-004: FastAPI 2-3x faster than Flask/Django
 - ADR-005: Redis 5-10ms reads (vs 50-100ms databases)
 
@@ -67,7 +67,7 @@ Each ADR follows this structure:
 1. **Quantify Everything**: Metrics beat opinions (latency numbers, cost breakdowns, benchmark results)
 2. **Consider Alternatives**: Document 3-5 alternatives with specific rejection reasons
 3. **Track Outcomes**: Update ADRs with actual production metrics
-4. **Optimize for Context**: MVP/portfolio project ≠ enterprise constraints (cost sensitivity, simplicity priority)
+4. **Optimize for Context**: Research platform constraints (cost sensitivity, variable load) differ from high-throughput enterprise systems
 5. **Avoid Premature Optimization**: Choose simple solutions until metrics prove scaling needed (Redis linear scan acceptable until >1,000 entries)
 
 ## Contributing

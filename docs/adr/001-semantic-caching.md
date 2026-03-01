@@ -22,15 +22,15 @@ Implement semantic caching using Redis with sentence embeddings for similarity m
 - Invalidation: Automatic (TTL) + manual endpoint (`DELETE /api/v1/cache/`)
 
 **Architecture flow:**
-1. Topic submitted → generate embedding (sentence-transformers)
+1. Topic submitted -> generate embedding (sentence-transformers)
 2. Query Redis for similar embeddings (cosine similarity > 0.95)
 3. Cache hit: return stored result (<500ms)
-4. Cache miss: execute workflow → store (embedding + result) with 30-day TTL
+4. Cache miss: execute workflow -> store (embedding + result) with 30-day TTL
 
 ## Alternatives Considered
 
 **1. Exact string matching (traditional cache)**
-- Misses semantic similarity ("AI ethics" ≠ "artificial intelligence ethics")
+- Misses semantic similarity ("AI ethics" != "artificial intelligence ethics")
 - Lower hit rate (20-30% vs 60-80%)
 - Rejected: Insufficient ROI for research platform
 
@@ -53,7 +53,7 @@ Implement semantic caching using Redis with sentence embeddings for similarity m
 
 **Positive:**
 - 60-80% cost reduction for similar queries (measured in production)
-- Latency improvement: 45s → <500ms for cache hits
+- Latency improvement: 45s -> <500ms for cache hits
 - Scales horizontally (Redis supports multi-instance deployments)
 - Manual invalidation endpoint for debugging and forced refreshes
 
@@ -74,7 +74,7 @@ Implement semantic caching using Redis with sentence embeddings for similarity m
 - Cache hit rate: 68% (target: 60-80%)
 - Average latency (cache hit): <1s instant delivery with SSE cache_hit event (baseline: 60-90s streaming)
 - Average latency (cache miss): 60-90s with progressive streaming updates
-- Cost savings: $0.034 per cached query × 68% hit rate = 72% reduction
+- Cost savings: $0.034 per cached query x 68% hit rate = 72% reduction
 - Storage utilization: 4.8KB average per entry, 12MB total (1,000 entries)
 - Cache-aware streaming: Instant results on hit, real-time progress on miss (see ADR-006)
 

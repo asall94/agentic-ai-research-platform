@@ -102,7 +102,7 @@ eventSource.onmessage = (event) => {
 - Streaming overhead: <100ms per event
 
 ### User Experience
-- Visibility: Users see plan → step 1 → step 2 → final (not just spinner)
+- Visibility: Users see plan -> step 1 -> step 2 -> final (not just spinner)
 - Feedback: Progress messages explain current action
 - Confidence: Real-time updates prove system is working
 

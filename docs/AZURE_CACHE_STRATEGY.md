@@ -32,7 +32,7 @@ if self.enabled:
 **Why**: Avoids loading 500MB+ PyTorch dependencies when cache is disabled locally.
 
 ### 2. Semantic Matching
-- Query → 384-dim embedding (all-MiniLM-L6-v2 model)
+- Query -> 384-dim embedding (all-MiniLM-L6-v2 model)
 - Cosine similarity search across cached embeddings
 - Match threshold: 0.95 (highly similar queries)
 
@@ -81,20 +81,20 @@ env {
 
 ### Cache Hit Scenario
 ```
-User Request → Check Cache → Embedding Similarity → Return Cached Result
+User Request -> Check Cache -> Embedding Similarity -> Return Cached Result
 Time: <1s | Cost: $0.001 (embedding only)
 ```
 
 ### Cache Miss Scenario
 ```
-User Request → Execute Workflow → OpenAI API (3-5 calls) → Store Result + Embedding
+User Request -> Execute Workflow -> OpenAI API (3-5 calls) -> Store Result + Embedding
 Time: 10-60s | Cost: $0.30-$0.80
 ```
 
 ### Observed Hit Rate
 - **Research workflows**: 40-60% (users refine similar topics)
 - **Production clusters**: 30-50% (common use cases)
-- **Educational demos**: 70%+ (repeated examples)
+- **Recurring topic queries**: 70%+ (repeated searches on similar subjects)
 
 ## Development Workflow
 
@@ -195,14 +195,6 @@ curl http://localhost:8000/api/v1/cache/stats  # Check cache status
 ```env
 CACHE_SIMILARITY_THRESHOLD=0.90
 ```
-
-## Future Enhancements
-
-1. **Multi-level caching**: L1 (in-memory) + L2 (Redis)
-2. **Cache warming**: Pre-populate common queries
-3. **Adaptive TTL**: Extend TTL for frequently accessed items
-4. **Compression**: Reduce Redis memory usage (zlib/gzip)
-5. **Distributed cache**: Redis Cluster for high-scale deployments
 
 ## References
 

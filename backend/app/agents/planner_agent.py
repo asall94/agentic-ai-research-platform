@@ -32,10 +32,10 @@ Each step should be atomic, executable, and must rely only on the capabilities o
 DO NOT include irrelevant tasks like "create CSV", "set up a repo", "install packages", etc.
 DO include real research-related tasks (e.g., search, summarize, draft, revise).
 DO assume tool use is available.
-DO NOT include explanation text — return ONLY the Python list.
+DO NOT include explanation text - return ONLY the Python list.
 The final step should be to generate a Markdown document containing the complete research report.
 
-**IMPORTANT: The plan should result in content written in the SAME LANGUAGE as the topic** (French topic → French output, English topic → English output, etc.).
+**IMPORTANT: The plan should result in content written in the SAME LANGUAGE as the topic** (French topic -> French output, English topic -> English output, etc.).
 
 Topic: "{topic}"
 """

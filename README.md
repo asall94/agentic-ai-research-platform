@@ -8,7 +8,7 @@
 
 Production-ready multi-agent research platform with autonomous workflow orchestration. Implements LLM-driven agent routing, semantic caching (60-80% cost reduction), and real-time streaming. Built with FastAPI backend, React frontend, deployed on Azure Container Apps.
 
-**Live Demo:** https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io
+**Deployed application:** https://ca-agentic-ai-frontend.livelydune-8ed54566.westeurope.azurecontainerapps.io
 
 ## Agentic Workflows
 
@@ -157,7 +157,7 @@ backend/
 │   ├── services/        # Cache, metrics services
 │   ├── tools/           # arXiv, Tavily, Wikipedia integrations
 │   └── workflows/       # Orchestration logic
-├── tests/               # Pytest suite (>70% coverage)
+├── tests/               # Pytest suite (~69% coverage)
 ├── Dockerfile           # Multi-stage production build
 └── main.py              # FastAPI application
 
@@ -319,7 +319,7 @@ RATE_LIMIT_WINDOW_SECONDS=900  # 15 minutes
 
 ## Real-Time Streaming
 
-Server-Sent Events (SSE) provide ChatGPT-style progressive rendering:
+Server-Sent Events (SSE) provide real-time progressive rendering:
 - Progressive UI updates as each agent completes its step
 - Cache-aware optimization: <1s instant results on cache hit, 60-90s streaming on miss
 - Event types: `start`, `cache_hit`, `progress`, `step_complete`, `complete`, `error`
@@ -539,20 +539,6 @@ cd terraform
 
 **Abdoulaye SALL** - Lead AI Engineer  
 [LinkedIn](https://linkedin.com/in/abdoulaye-sall/) 
-
-**Skills Demonstrated:**
-- Multi-agent orchestration with LLM-driven task routing
-- Agentic AI workflows (tool integration, multi-agent orchestration, planning)
-- Production FastAPI deployment with async patterns
-- Server-Sent Events (SSE) for real-time streaming with cache-aware optimization
-- Semantic caching with sentence embeddings (60-80% cost reduction)
-- OpenAI GPT-4/GPT-4o-mini integration with function calling
-- Azure Container Apps deployment with Terraform IaC
-- Azure Application Insights monitoring with custom metrics and telemetry
-- GitHub Actions CI/CD with automated testing and deployment
-- Structured JSON logging for production monitoring
-- Rate limiting and middleware architecture
-- Redis cache optimization with cosine similarity matching
 
 **License:** Proprietary - See LICENSE for details
 

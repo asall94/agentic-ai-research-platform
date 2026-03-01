@@ -167,7 +167,7 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     html_output = await workflow._convert_to_html(revised_report)
     
-    # Final result — collect sources from tool call results, filter to relevant ones
+    # Final result - collect sources from tool call results, filter to relevant ones
     from app.utils import filter_relevant_sources
     raw_sources = list(research_agent.collected_sources)
     sources = filter_relevant_sources(raw_sources, revised_report or research_report)
@@ -248,7 +248,7 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
             "data": {"step": step, "agent": agent_name, "output": output}
         }) + "\n\n"
     
-    # Final synthesis — WriterAgent produces polished report (mirrors MultiAgentWorkflow.execute)
+    # Final synthesis - WriterAgent produces polished report (mirrors MultiAgentWorkflow.execute)
     yield "data: " + json.dumps({
         "type": "progress",
         "step": f"step_{len(plan_steps) + 1}",

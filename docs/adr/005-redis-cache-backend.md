@@ -52,7 +52,7 @@ class CacheService:
 - Purpose-built for similarity search, sub-10ms queries
 - Automatic scaling, no indexing management
 - Cost: $70/month starter plan (vs $0 Upstash free tier)
-- Rejected: Too expensive for MVP, unnecessary for <10,000 vectors
+- Rejected: Cost disproportionate to scale, unnecessary for <10,000 vectors
 
 **3. Milvus (open-source vector DB)**
 - High performance (GPU acceleration), massive scale (billions of vectors)
@@ -96,9 +96,9 @@ class CacheService:
 - No persistence guarantees: Upstash evicts on memory pressure (LRU)
 
 **Performance analysis:**
-- Current scale: 100 cached entries × 1ms comparison = 100ms worst-case scan
-- Target scale: 1,000 entries × 1ms = 1s (still acceptable)
-- Breaking point: 10,000 entries × 1ms = 10s (requires vector DB migration)
+- Current scale: 100 cached entries x 1ms comparison = 100ms worst-case scan
+- Target scale: 1,000 entries x 1ms = 1s (still acceptable)
+- Breaking point: 10,000 entries x 1ms = 10s (requires vector DB migration)
 
 **Cost breakdown:**
 - Upstash free tier: 10,000 commands/day (sufficient for 100-500 cache ops + 200-300 cache stores)

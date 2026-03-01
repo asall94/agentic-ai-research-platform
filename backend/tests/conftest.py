@@ -85,7 +85,7 @@ def mock_openai_client(request):
     mock_response = Mock()
     mock_response.choices = [mock_choice]
     
-    # Configure mock client — .create() is async so use AsyncMock
+    # Configure mock client - .create() is async so use AsyncMock
     mock_client_instance = Mock()
     mock_client_instance.chat.completions.create = AsyncMock(return_value=mock_response)
     

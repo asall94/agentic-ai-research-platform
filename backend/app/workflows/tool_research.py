@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class ToolResearchWorkflow:
-    """Tool-enhanced research workflow (Q3): Search → Reflect → Export"""
+    """Tool-enhanced research workflow (Q3): Search -> Reflect -> Export"""
     
     def __init__(
         self,

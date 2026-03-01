@@ -22,13 +22,13 @@ Use FastAPI with async/await architecture, Pydantic validation, and structured m
 
 **Architecture layers:**
 ```
-main.py → middleware → routes → workflows → agents → external APIs
+main.py -> middleware -> routes -> workflows -> agents -> external APIs
 ```
 
 **Key patterns:**
 - Async agents: All `execute()` methods use `async def`
 - Dependency injection: Settings via `Depends(get_settings)`
-- Middleware stack: Logging → Rate Limiting → CORS
+- Middleware stack: Logging -> Rate Limiting -> CORS
 - Structured responses: Pydantic models with `workflow_id`, `status`, `execution_time`
 
 ## Alternatives Considered
@@ -77,7 +77,7 @@ main.py → middleware → routes → workflows → agents → external APIs
 - Learning curve: async/await requires understanding event loops
 - Debugging: Async stack traces harder to read than sync
 - Ecosystem maturity: Some libraries still sync-only (requires thread pool workarounds)
-- Breaking changes: Pydantic v2 migration (v1→v2 not backward compatible)
+- Breaking changes: Pydantic v2 migration (v1->v2 not backward compatible)
 
 **Performance benchmarks (wrk, 1000 req, 10 connections):**
 - FastAPI (uvicorn): 2,800 req/s

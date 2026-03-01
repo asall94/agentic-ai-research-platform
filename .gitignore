@@ -64,7 +64,3 @@ htmlcov/
 
 # Development test files
 test-sse-streaming.html
-
-# Portfolio briefs (personal career documents)
-portfolio_bref_*.md
-technical_interview_qa.md

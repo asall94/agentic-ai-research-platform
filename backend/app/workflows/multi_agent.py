@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class MultiAgentWorkflow:
-    """Multi-agent orchestration workflow (Q5): Plan → Research → Write → Edit"""
+    """Multi-agent orchestration workflow (Q5): Plan -> Research -> Write -> Edit"""
     
     def __init__(
         self,

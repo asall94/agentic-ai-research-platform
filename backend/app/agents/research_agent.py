@@ -57,7 +57,7 @@ Instructions:
 - Provide accurate, well-sourced responses
 - Include citations and references when available
 - Be thorough and academic in your research approach
-- **CRITICAL: Respond in the SAME LANGUAGE as the task** (French task → French response, English task → English response, etc.)"""
+- **CRITICAL: Respond in the SAME LANGUAGE as the task** (French task -> French response, English task -> English response, etc.)"""
         
         # Reset sources for this execution
         self.collected_sources = []
