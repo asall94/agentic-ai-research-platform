@@ -100,15 +100,16 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     research_agent = ResearchAgent(model=workflow.model)
-    # Run research with keepalive pings to prevent SSE timeout on long tool calls
-    research_task = asyncio.create_task(
+    # Run with keepalive data events to prevent proxy/browser SSE timeout
+    research_future = asyncio.ensure_future(
         research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
     )
-    while not research_task.done():
-        await asyncio.sleep(10)
-        if not research_task.done():
-            yield ": keepalive\n\n"
-    research_report = await research_task
+    while True:
+        done, _ = await asyncio.wait({research_future}, timeout=5.0)
+        if research_future in done:
+            break
+        yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
+    research_report = research_future.result()
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -124,12 +125,13 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     reflection_agent = ReflectionAgent(model=workflow.model)
-    reflection_task = asyncio.create_task(reflection_agent.execute(research_report))
-    while not reflection_task.done():
-        await asyncio.sleep(10)
-        if not reflection_task.done():
-            yield ": keepalive\n\n"
-    reflection = await reflection_task
+    reflection_future = asyncio.ensure_future(reflection_agent.execute(research_report))
+    while True:
+        done, _ = await asyncio.wait({reflection_future}, timeout=5.0)
+        if reflection_future in done:
+            break
+        yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
+    reflection = reflection_future.result()
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -145,12 +147,13 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     revision_agent = RevisionAgent(model=workflow.model)
-    revision_task = asyncio.create_task(revision_agent.execute(research_report, reflection))
-    while not revision_task.done():
-        await asyncio.sleep(10)
-        if not revision_task.done():
-            yield ": keepalive\n\n"
-    revised_report = await revision_task
+    revision_future = asyncio.ensure_future(revision_agent.execute(research_report, reflection))
+    while True:
+        done, _ = await asyncio.wait({revision_future}, timeout=5.0)
+        if revision_future in done:
+            break
+        yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
+    revised_report = revision_future.result()
     
     yield "data: " + json.dumps({
         "type": "step_complete",

@@ -52,6 +52,10 @@ export function streamWorkflow(workflowType, params, callbacks) {
           eventSource.close();
           break;
           
+        case 'keepalive':
+          // Server heartbeat to keep SSE connection alive - ignore
+          break;
+
         case 'error':
           console.error('[SSE] Workflow error:', data.message);
           if (callbacks.onError) {
