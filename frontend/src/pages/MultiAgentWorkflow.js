@@ -498,13 +498,15 @@ const MultiAgentWorkflow = () => {
           <div className="card">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Research Summary</h2>
-              <button
-                onClick={downloadPDF}
-                className="text-primary-600 hover:text-primary-700 flex items-center space-x-2 font-medium"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5" />
-                <span>Download PDF</span>
-              </button>
+              {!loading && (
+                <button
+                  onClick={downloadPDF}
+                  className="text-primary-600 hover:text-primary-700 flex items-center space-x-2 font-medium"
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                  <span>Download PDF</span>
+                </button>
+              )}
             </div>
             <div className="prose max-w-none prose-p:my-2 prose-p:leading-relaxed">
               <ReactMarkdown>{result.final_report}</ReactMarkdown>
@@ -525,17 +527,16 @@ const MultiAgentWorkflow = () => {
                       {index + 1}
                     </span>
                     <div className="flex-1">
-                      {source.url ? (
+                      <p className="text-sm font-medium text-gray-900">{source.title || source.name}</p>
+                      {source.url && (
                         <a
                           href={source.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                          className="text-xs text-primary-600 hover:text-primary-700 hover:underline break-all"
                         >
-                          {source.title || source.name}
+                          {source.url}
                         </a>
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900">{source.title || source.name}</p>
                       )}
                     </div>
                   </div>

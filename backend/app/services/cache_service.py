@@ -19,11 +19,21 @@ class CacheService:
         
         if self.enabled:
             try:
-                self.redis_client = redis.from_url(
-                    settings.REDIS_URL,
-                    decode_responses=False,
-                    ssl_cert_reqs=None  # Disable SSL cert verification for Upstash
-                )
+                import ssl as _ssl
+                if settings.REDIS_URL.startswith("rediss://"):
+                    _ssl_ctx = _ssl.create_default_context()
+                    _ssl_ctx.check_hostname = False
+                    _ssl_ctx.verify_mode = _ssl.CERT_NONE
+                    self.redis_client = redis.from_url(
+                        settings.REDIS_URL,
+                        decode_responses=False,
+                        ssl_context=_ssl_ctx
+                    )
+                else:
+                    self.redis_client = redis.from_url(
+                        settings.REDIS_URL,
+                        decode_responses=False
+                    )
                 self.redis_client.ping()
                 logger.info(f"Redis connected: {settings.REDIS_URL}")
                 

@@ -162,13 +162,13 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     html_output = await workflow._convert_to_html(revised_report)
     
     # Final result - collect sources from tool call results, filter to relevant ones
-    from app.utils import filter_relevant_sources
+    from app.utils import filter_relevant_sources, strip_inline_links
     raw_sources = list(research_agent.collected_sources)
     sources = filter_relevant_sources(raw_sources, revised_report or research_report)
     final_result = {
-        "research_report": research_report,
+        "research_report": strip_inline_links(research_report),
         "reflection": reflection,
-        "revised_report": revised_report,
+        "revised_report": strip_inline_links(revised_report),
         "html_output": html_output,
         "sources": sources[:10]
     }
@@ -267,9 +267,9 @@ Team work history:
 
     final_report = await workflow.agents["writer_agent"].execute(synthesis_task)
 
-    # Collect and filter sources
+    # Collect and filter sources (extract from raw report before stripping)
     import re as _re
-    from app.utils import filter_relevant_sources
+    from app.utils import filter_relevant_sources, strip_inline_links
     sources = list(workflow.agents["research_agent"].collected_sources)
     seen_urls = {s["url"] for s in sources}
     for title, url in _re.findall(r'\[([^\]]+)\]\(([^\)]+)\)', final_report):
@@ -277,6 +277,7 @@ Team work history:
             sources.append({"title": title, "url": url})
             seen_urls.add(url)
     sources = filter_relevant_sources(sources, final_report)
+    final_report = strip_inline_links(final_report)
 
     yield "data: " + json.dumps({
         "type": "step_complete",

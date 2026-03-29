@@ -1,5 +1,13 @@
 """Utility to filter collected sources to those actually referenced in the final output."""
+import re
 from urllib.parse import urlparse
+
+
+def strip_inline_links(text: str) -> str:
+    """Remove markdown inline links [text](url) -> text, keeping only the label."""
+    if not text:
+        return text
+    return re.sub(r'\[([^\]]+)\]\(https?://[^\)]+\)', r'\1', text)
 
 
 def filter_relevant_sources(sources: list, report_text: str) -> list:
