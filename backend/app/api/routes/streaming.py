@@ -106,14 +106,9 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     research_agent = ResearchAgent(model=workflow.model)
-    research_task = asyncio.create_task(
-        research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
-    )
-    while not research_task.done():
-        await asyncio.sleep(5)
-        if not research_task.done():
-            yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
-    research_report = research_task.result()
+    logger.info(f"[W2] Starting research agent for: {topic[:50]}")
+    research_report = await research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
+    logger.info(f"[W2] Research agent completed, len={len(research_report or '')}")
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -129,12 +124,9 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     reflection_agent = ReflectionAgent(model=workflow.model)
-    reflection_task = asyncio.create_task(reflection_agent.execute(research_report))
-    while not reflection_task.done():
-        await asyncio.sleep(5)
-        if not reflection_task.done():
-            yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
-    reflection = reflection_task.result()
+    logger.info("[W2] Starting reflection agent")
+    reflection = await reflection_agent.execute(research_report)
+    logger.info("[W2] Reflection agent completed")
     
     yield "data: " + json.dumps({
         "type": "step_complete",
@@ -150,12 +142,9 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     }) + "\n\n"
     
     revision_agent = RevisionAgent(model=workflow.model)
-    revision_task = asyncio.create_task(revision_agent.execute(research_report, reflection))
-    while not revision_task.done():
-        await asyncio.sleep(5)
-        if not revision_task.done():
-            yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
-    revised_report = revision_task.result()
+    logger.info("[W2] Starting revision agent")
+    revised_report = await revision_agent.execute(research_report, reflection)
+    logger.info("[W2] Revision agent completed")
     
     yield "data: " + json.dumps({
         "type": "step_complete",
