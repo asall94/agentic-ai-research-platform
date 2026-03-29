@@ -499,6 +499,17 @@ const ToolResearchWorkflow = () => {
                 {(result.revised_report || result.research_report || '').replace(/\n#{1,3}\s*(references|r\u00e9f\u00e9rences|sources)\s*\n[\s\S]*/i, '')}
               </ReactMarkdown>
             </div>
+            {!loading && (
+              <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={downloadPDF}
+                  className="text-primary-600 hover:text-primary-700 flex items-center space-x-2 font-medium"
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                  <span>Download PDF</span>
+                </button>
+              </div>
+            )}
           </div>
           
           {/* Sources Section - Industry Standard */}

@@ -8,7 +8,11 @@ from app.models.schemas import (
 from app.workflows.tool_research import ToolResearchWorkflow
 from app.workflows.multi_agent import MultiAgentWorkflow
 from app.services.cache_service import cache_service
-from app.utils import strip_inline_links
+from app.utils import strip_inline_links, strip_source_annotations
+
+
+def _clean(text):
+    return strip_source_annotations(strip_inline_links(text)) if text else text
 from app.services.metrics_service import metrics_service
 from app.core.logging_config import StructuredLogger
 from app.core.app_insights import track_workflow
@@ -72,9 +76,9 @@ async def execute_tool_research_workflow(request: ToolResearchWorkflowRequest):
             created_at=datetime.now(),
             execution_time=execution_time,
             result=result,
-            research_report=strip_inline_links(result.get("research_report", "")),
+            research_report=_clean(result.get("research_report", "")),
             reflection=result.get("reflection"),
-            revised_report=strip_inline_links(result.get("revised_report")),
+            revised_report=_clean(result.get("revised_report")),
 
             html_output=result.get("html_output"),
             sources=result.get("sources", [])
@@ -146,7 +150,7 @@ async def execute_multi_agent_workflow(request: MultiAgentWorkflowRequest):
             result=result,
             plan=result.get("plan", []),
             execution_history=result.get("history", []),
-            final_report=strip_inline_links(result.get("final_report", ""))
+            final_report=_clean(result.get("final_report", ""))
         )
         
     except Exception as e:

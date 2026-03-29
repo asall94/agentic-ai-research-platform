@@ -509,10 +509,23 @@ const MultiAgentWorkflow = () => {
               )}
             </div>
             <div className="prose max-w-none prose-p:my-2 prose-p:leading-relaxed">
-              <ReactMarkdown>{result.final_report}</ReactMarkdown>
+              <ReactMarkdown>
+                {(result.final_report || '').replace(/\n#{1,3}\s*(references|r\u00e9f\u00e9rences|sources)\s*\n[\s\S]*/i, '')}
+              </ReactMarkdown>
             </div>
             {result.cacheHit && (
               <p className="text-sm text-green-600 mt-4">Cache hit - instant result</p>
+            )}
+            {!loading && (
+              <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={downloadPDF}
+                  className="text-primary-600 hover:text-primary-700 flex items-center space-x-2 font-medium"
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                  <span>Download PDF</span>
+                </button>
+              </div>
             )}
           </div>
           

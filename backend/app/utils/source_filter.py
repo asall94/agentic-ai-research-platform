@@ -10,6 +10,13 @@ def strip_inline_links(text: str) -> str:
     return re.sub(r'\[([^\]]+)\]\(https?://[^\)]+\)', r'\1', text)
 
 
+def strip_source_annotations(text: str) -> str:
+    """Remove inline (source: X) / (source : X) annotations from body text."""
+    if not text:
+        return text
+    return re.sub(r'\s*\(\s*source\s*:\s*[^)]+\)', '', text, flags=re.IGNORECASE)
+
+
 def filter_relevant_sources(sources: list, report_text: str) -> list:
     """
     Return only the sources whose content is traceable in the report.
