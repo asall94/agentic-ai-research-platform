@@ -1,8 +1,22 @@
 import wikipedia
+import time
 from typing import List, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _retry(func, retries: int = 3, delay: float = 1.0):
+    """Retry a callable on SSL/connection errors with exponential backoff."""
+    for attempt in range(retries):
+        try:
+            return func()
+        except Exception as e:
+            err = str(e)
+            if attempt < retries - 1 and any(k in err for k in ("SSL", "Connection", "EOF", "timeout")):
+                time.sleep(delay * (2 ** attempt))
+                continue
+            raise
 
 
 def wikipedia_search_tool(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
@@ -17,18 +31,18 @@ def wikipedia_search_tool(query: str, max_results: int = 5) -> List[Dict[str, An
         List of article dictionaries
     """
     try:
-        # Search for pages
-        search_results = wikipedia.search(query, results=max_results)
+        # Search for pages with retry on SSL/network errors
+        search_results = _retry(lambda: wikipedia.search(query, results=max_results))
         
         results = []
         for title in search_results:
             try:
-                page = wikipedia.page(title, auto_suggest=False)
+                page = _retry(lambda t=title: wikipedia.page(t, auto_suggest=False))
                 results.append({
                     "title": page.title,
-                    "summary": wikipedia.summary(title, sentences=3, auto_suggest=False),
+                    "summary": _retry(lambda t=title: wikipedia.summary(t, sentences=3, auto_suggest=False)),
                     "url": page.url,
-                    "content": page.content[:1000]  # First 1000 chars
+                    "content": page.content[:1000]
                 })
             except wikipedia.exceptions.DisambiguationError as e:
                 # If disambiguation, take first option

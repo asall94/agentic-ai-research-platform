@@ -64,3 +64,4 @@ htmlcov/
 
 # Development test files
 test-sse-streaming.html
+.ps_history*
