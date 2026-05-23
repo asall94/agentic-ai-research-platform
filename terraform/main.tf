@@ -146,6 +146,7 @@ resource "azurerm_container_app" "backend" {
   ingress {
     external_enabled = true
     target_port      = 8000
+    transport        = "http"
     traffic_weight {
       percentage      = 100
       latest_revision = true
