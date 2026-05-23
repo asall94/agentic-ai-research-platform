@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 logger = logging.getLogger(__name__)
 
 
-async def _keepalive_while(coro, result: list, interval: float = 15.0):
+async def _keepalive_while(coro, result: list, interval: float = 5.0):
     """Yield SSE keepalive events every `interval` seconds while coro runs.
     Appends the return value to `result`. Propagates exceptions from coro."""
     task = asyncio.create_task(coro)
