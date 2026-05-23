@@ -60,6 +60,7 @@ const ToolResearchWorkflow = () => {
     setResult({});
     setCurrentStep('research');
     setProgressMessage('');
+    setProgressSteps({});
     const startTime = Date.now();
     
     cleanupRef.current = streamWorkflow(

@@ -23,8 +23,9 @@ def arxiv_search_tool(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
             sort_by=arxiv.SortCriterion.Relevance
         )
         
+        client = arxiv.Client()
         results = []
-        for paper in search.results():
+        for paper in client.results(search):
             results.append({
                 "title": paper.title,
                 "authors": [author.name for author in paper.authors],
