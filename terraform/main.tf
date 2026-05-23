@@ -74,21 +74,6 @@ resource "azurerm_container_app" "backend" {
       memory = "2Gi"
 
       env {
-        name  = "OPENAI_API_KEY"
-        value = var.openai_api_key
-      }
-
-      env {
-        name  = "TAVILY_API_KEY"
-        value = var.tavily_api_key
-      }
-
-      env {
-        name  = "REDIS_URL"
-        value = var.redis_url
-      }
-
-      env {
         name  = "CACHE_ENABLED"
         value = "True"
       }
@@ -153,6 +138,13 @@ resource "azurerm_container_app" "backend" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image,
+      template[0].container[0].env,
+    ]
+  }
+
   tags = azurerm_resource_group.main.tags
 }
 
@@ -187,6 +179,13 @@ resource "azurerm_container_app" "frontend" {
       percentage      = 100
       latest_revision = true
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image,
+      template[0].container[0].env,
+    ]
   }
 
   tags = azurerm_resource_group.main.tags

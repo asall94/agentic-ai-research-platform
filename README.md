@@ -101,7 +101,8 @@ graph TB
 **Real-Time Streaming** - Server-Sent Events (SSE)
 - Progressive workflow updates (start, progress, step_complete, complete, error)
 - Cache-aware: instant delivery on hit, live updates on miss
-- EventSource API with automatic reconnection
+- Keepalive events every 5s — prevents Azure Container Apps (Envoy) from closing idle connections
+- HTTP/1.1 enforced via `transport = "http"` in Terraform (avoids HTTP/2 frame buffering)
 - Headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no`
 
 **Monitoring & Observability**
@@ -323,8 +324,8 @@ Server-Sent Events (SSE) provide real-time progressive rendering:
 - Progressive UI updates as each agent completes its step
 - Cache-aware optimization: <1s instant results on cache hit, 60-90s streaming on miss
 - Event types: `start`, `cache_hit`, `progress`, `step_complete`, `complete`, `error`
-- Auto-reconnection on network interruption
-- Works with Azure Container Apps auto-scaling
+- Keepalive events every 5s — prevents Azure Container Apps (Envoy) from closing idle connections
+- HTTP/1.1 enforced via `transport = "http"` in Terraform (avoids HTTP/2 frame buffering)
 - See `docs/adr/006-server-sent-events-streaming.md` for decision rationale
 
 **Frontend Integration:**
@@ -392,6 +393,7 @@ Intelligent caching with sentence embeddings reduces costs and latency:
 - Cosine similarity matching (threshold: 0.95)
 - 30-day TTL with manual invalidation endpoint
 - Cache-aware streaming: Instant delivery on hit, progressive updates on miss
+- Redis TLS (`rediss://`): configured with `ssl_cert_reqs=None` (redis-py v4+ — `ssl_context=` kwarg removed)
 - See `docs/adr/001-semantic-caching.md` and `docs/adr/006-server-sent-events-streaming.md` for rationale
 
 ## Configuration

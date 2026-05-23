@@ -28,26 +28,6 @@ variable "project_name" {
   default     = "agentic-ai"
 }
 
-variable "openai_api_key" {
-  description = "OpenAI API key for LLM access"
-  type        = string
-  sensitive   = true
-}
-
-variable "tavily_api_key" {
-  description = "Tavily API key for web search"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "redis_url" {
-  description = "Redis connection URL (Upstash)"
-  type        = string
-  sensitive   = true
-  default     = "redis://localhost:6379"
-}
-
 variable "environment" {
   description = "Deployment environment"
   type        = string
