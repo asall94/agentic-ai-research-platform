@@ -5,6 +5,18 @@ from typing import AsyncGenerator
 
 logger = logging.getLogger(__name__)
 
+
+async def _keepalive_while(coro, result: list, interval: float = 15.0):
+    """Yield SSE keepalive events every `interval` seconds while coro runs.
+    Appends the return value to `result`. Propagates exceptions from coro."""
+    task = asyncio.create_task(coro)
+    while not task.done():
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=interval)
+        except asyncio.TimeoutError:
+            yield "data: " + json.dumps({"type": "keepalive"}) + "\n\n"
+    result.append(task.result())  # re-raises if task raised
+
 async def stream_workflow_progress(workflow_type: str, topic: str, workflow_func, cache_service, **kwargs) -> AsyncGenerator[str, None]:
     """
     Stream workflow execution progress as SSE events with cache awareness.
@@ -107,7 +119,10 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     research_agent = ResearchAgent(model=workflow.model)
     logger.info(f"[W2] Starting research agent for: {topic[:50]}")
-    research_report = await research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping)
+    _r = []
+    async for _evt in _keepalive_while(research_agent.execute(topic, tools=tools, tool_func_mapping=tool_func_mapping), _r):
+        yield _evt
+    research_report = _r[0]
     logger.info(f"[W2] Research agent completed, len={len(research_report or '')}")
     
     yield "data: " + json.dumps({
@@ -125,7 +140,10 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     reflection_agent = ReflectionAgent(model=workflow.model)
     logger.info("[W2] Starting reflection agent")
-    reflection = await reflection_agent.execute(research_report)
+    _r = []
+    async for _evt in _keepalive_while(reflection_agent.execute(research_report), _r):
+        yield _evt
+    reflection = _r[0]
     logger.info("[W2] Reflection agent completed")
     
     yield "data: " + json.dumps({
@@ -143,7 +161,10 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
     
     revision_agent = RevisionAgent(model=workflow.model)
     logger.info("[W2] Starting revision agent")
-    revised_report = await revision_agent.execute(research_report, reflection)
+    _r = []
+    async for _evt in _keepalive_while(revision_agent.execute(research_report, reflection), _r):
+        yield _evt
+    revised_report = _r[0]
     logger.info("[W2] Revision agent completed")
     
     yield "data: " + json.dumps({
@@ -159,7 +180,10 @@ async def stream_tool_research_workflow(workflow, topic: str, **kwargs) -> Async
         "message": "Formatting output..."
     }) + "\n\n"
     
-    html_output = await workflow._convert_to_html(revised_report)
+    _r = []
+    async for _evt in _keepalive_while(workflow._convert_to_html(revised_report), _r):
+        yield _evt
+    html_output = _r[0]
     
     # Final result - collect sources from tool call results, filter to relevant ones
     from app.utils import filter_relevant_sources, strip_inline_links, strip_source_annotations
@@ -188,7 +212,10 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
     # Planning step - silently execute (plan already shown in frontend)
     from app.agents import PlannerAgent
     planner = PlannerAgent()
-    plan_steps = await planner.execute(topic)
+    _r = []
+    async for _evt in _keepalive_while(planner.execute(topic), _r):
+        yield _evt
+    plan_steps = _r[0]
     
     if workflow.limit_steps:
         plan_steps = plan_steps[:min(len(plan_steps), max_steps)]
@@ -208,7 +235,10 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
             "message": f"Step {i}/{len(plan_steps)}: {step[:60]}..."
         }) + "\n\n"
         
-        decision = await workflow._decide_agent(step)
+        _r = []
+        async for _evt in _keepalive_while(workflow._decide_agent(step), _r):
+            yield _evt
+        decision = _r[0]
         agent_name = decision.get("agent")
         task = decision.get("task")
         
@@ -220,7 +250,8 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
             from app.tools.arxiv_tool import arxiv_tool_def, arxiv_search_tool
             from app.tools.tavily_tool import tavily_tool_def, tavily_search_tool
             from app.tools.wikipedia_tool import wikipedia_tool_def, wikipedia_search_tool
-            output = await agent.execute(
+            _r = []
+            async for _evt in _keepalive_while(agent.execute(
                 enriched_task,
                 tools=[arxiv_tool_def, tavily_tool_def, wikipedia_tool_def],
                 tool_func_mapping={
@@ -228,9 +259,14 @@ async def stream_multi_agent_workflow(workflow, topic: str, **kwargs) -> AsyncGe
                     "tavily_search_tool": tavily_search_tool,
                     "wikipedia_search_tool": wikipedia_search_tool,
                 }
-            )
+            ), _r):
+                yield _evt
+            output = _r[0]
         elif agent:
-            output = await agent.execute(enriched_task)
+            _r = []
+            async for _evt in _keepalive_while(agent.execute(enriched_task), _r):
+                yield _evt
+            output = _r[0]
         else:
             output = f"Unknown agent: {agent_name}"
         
@@ -265,7 +301,10 @@ Team work history:
 
 **IMPORTANT:** Return ONLY the final polished report text, NOT meta-commentary or explanations about what you did."""
 
-    final_report = await workflow.agents["writer_agent"].execute(synthesis_task)
+    _r = []
+    async for _evt in _keepalive_while(workflow.agents["writer_agent"].execute(synthesis_task), _r):
+        yield _evt
+    final_report = _r[0]
 
     # Collect and filter sources (extract from raw report before stripping)
     import re as _re
