@@ -65,3 +65,6 @@ htmlcov/
 # Development test files
 test-sse-streaming.html
 .ps_history*
+
+gen*_doc.py
+*.docx
